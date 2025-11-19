@@ -58,6 +58,7 @@ class AvailabilityController extends Controller
         $user = Auth::user();
         $availabilities = Availability::where('user_id', $user->id)->get();
 
+        /** @var \App\Models\Availability $availability */
         $events = $availabilities->map(function ($availability) {
             $date = $availability->date;
             $startTime = $availability->start_time;
@@ -87,6 +88,7 @@ class AvailabilityController extends Controller
     {
         $availabilities = Availability::where('user_id', $tutorId)->get();
 
+        /** @var \App\Models\Availability $availability */
         $events = $availabilities->map(function ($availability) {
             $date = $availability->date;
             $startTime = $availability->start_time;
@@ -110,6 +112,7 @@ class AvailabilityController extends Controller
      */
     public function updateTime(Request $request, $id)
     {
+        /** @var \App\Models\Availability $availability */
         $availability = Availability::findOrFail($id);
         $this->authorize('update', $availability);
 
