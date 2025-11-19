@@ -1,0 +1,24 @@
+/* DWCSJ theme: green (#228B22), yellow (#FFD700), orange (#FF8C00) */
+:root{
+  --dwc-green:#228B22;
+  --dwc-yellow:#FFD700;
+  --dwc-orange:#FF8C00;
+  --muted:#6c757d;
+  --bg: #f8fafc;
+}
+body{
+  font-family: 'Poppins', sans-serif;
+  background: var(--bg);
+  background-image: url('/images/DWCSJ_Seal.png');
+  background-repeat:no-repeat;
+  background-position: center;
+  background-size: 25%;
+  background-attachment: fixed;
+  background-blend-mode: overlay;
+}
+.navbar{background: linear-gradient(90deg,var(--dwc-green),var(--dwc-yellow));}
+.btn-primary{background:var(--dwc-green); border-color:var(--dwc-green);}
+.card{box-shadow: 0 2px 8px rgba(0,0,0,0.05);}
+.badge-subject{background:var(--dwc-orange); color:white;}
+.footer{padding:20px 0; background:#fffbe6; margin-top:40px; text-align:center; color:var(--muted);}
+.profile-img{width:96px; height:96px; object-fit:cover; border-radius:8px;}

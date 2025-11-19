@@ -1,0 +1,13 @@
+<?php
+namespace App\Models;
+use Illuminate\Database\Eloquent\Model;
+
+class Subject extends Model
+{
+    protected $fillable = ['code', 'name', 'education_level'];
+
+    public function tutors()
+    {
+        return $this->belongsToMany(User::class, 'subject_user', 'subject_id', 'user_id');
+    }
+}
