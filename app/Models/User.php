@@ -4,6 +4,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Subject;
+use App\Models\Availability;
+use App\Models\Booking;
+use App\Models\Feedback;
+use App\Models\TutorProfile;
 
 class User extends Authenticatable {
     use Notifiable, SoftDeletes;

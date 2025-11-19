@@ -379,6 +379,7 @@ class AllowedStudentIdController extends Controller
             fputcsv($out, ['id','student_id','education_level','used','deleted_at','created_at','updated_at']);
 
             // Stream rows via cursor to avoid memory issues
+            /** @var \App\Models\AllowedStudentId $row */
             foreach ($query->cursor() as $row) {
                 fputcsv($out, [
                     $row->id,
