@@ -12,6 +12,7 @@ use App\Http\Controllers\FeedbackController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Artisan;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,6 +51,17 @@ Route::get('/_debug', function (Request $request) {
         $db = 'ok';
     } catch (\Exception $e) {
         $db = $e->getMessage();
+    }
+
+    // Optional remote migration trigger (guarded by DEBUG_TOKEN).
+    if ($request->query('action') === 'migrate') {
+        try {
+            Artisan::call('migrate', ['--force' => true]);
+            $migrateOutput = Artisan::output();
+            return response()->json([ 'migrated' => true, 'output' => $migrateOutput ]);
+        } catch (\Exception $e) {
+            return response()->json([ 'migrated' => false, 'error' => $e->getMessage() ]);
+        }
     }
 
     return response()->json([
