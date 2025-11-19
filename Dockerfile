@@ -50,7 +50,9 @@ COPY --from=node-builder /app/public/build public/build
 # Ensure storage & cache directories are writable
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-EXPOSE 9000
+# Expose the HTTP port we will serve on (default Railway $PORT)
+EXPOSE 5000
 
-# Run PHP-FPM in foreground
-CMD ["php-fpm", "-F"]
+# Run PHP built-in web server using shell expansion for $PORT. Using
+# sh -c ensures the environment variable is expanded at runtime.
+CMD ["sh", "-c", "php -S 0.0.0.0:${PORT:-5000} -t public"]
