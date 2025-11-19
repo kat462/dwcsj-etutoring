@@ -55,4 +55,4 @@ EXPOSE 5000
 
 # Run PHP built-in web server using shell expansion for $PORT. Using
 # sh -c ensures the environment variable is expanded at runtime.
-CMD ["sh", "-c", "php artisan config:clear || true; php -S 0.0.0.0:${PORT:-5000} -t public"]
+CMD ["sh", "-c", "n=0; until php artisan migrate --force >/dev/stdout 2>&1; do n=$((n+1)); if [ $n -ge 10 ]; then echo 'migration attempts exhausted'; break; fi; echo \"migrate attempt $n failed, sleeping...\"; sleep 3; done; php artisan config:clear || true; php -S 0.0.0.0:${PORT:-5000} -t public"]
