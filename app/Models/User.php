@@ -10,6 +10,15 @@ use App\Models\Booking;
 use App\Models\Feedback;
 use App\Models\TutorProfile;
 
+/**
+ * Class User
+ *
+ * @property int $id
+ * @property string|null $student_id
+ * @property string $name
+ * @property string $email
+ * @property string $role
+ */
 class User extends Authenticatable {
     use Notifiable, SoftDeletes;
     protected $fillable = ['student_id','name','email','password','role','course','education_level','facebook_url','instagram_url','linkedin_url','bio','is_active'];

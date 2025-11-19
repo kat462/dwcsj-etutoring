@@ -7,6 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\Booking;
 
+/**
+ * Class Availability
+ *
+ * @property int $id
+ * @property int $user_id
+ * @property \Carbon\Carbon $date
+ * @property string $start_time
+ * @property string $end_time
+ * @property bool $is_booked
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ */
 class Availability extends Model
 {
     use HasFactory;
