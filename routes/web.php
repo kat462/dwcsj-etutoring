@@ -30,6 +30,11 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+// Healthcheck endpoint for Railway (returns 200 OK)
+Route::get('/health', function () {
+    return response('OK', 200);
+});
+
 // Role-based dashboards
 Route::middleware(['auth', 'role:tutee'])->group(function () {
     Route::get('/student/dashboard', [StudentDashboardController::class, 'index'])->name('student.dashboard');
