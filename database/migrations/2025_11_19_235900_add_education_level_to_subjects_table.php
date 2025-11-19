@@ -5,13 +5,25 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
     public function up() {
+        if (!Schema::hasTable('subjects')) {
+            return;
+        }
+
         Schema::table('subjects', function (Blueprint $table) {
-            $table->string('education_level')->nullable()->after('name');
+            if (!Schema::hasColumn('subjects', 'education_level')) {
+                $table->string('education_level')->nullable();
+            }
         });
     }
     public function down() {
+        if (!Schema::hasTable('subjects')) {
+            return;
+        }
+
         Schema::table('subjects', function (Blueprint $table) {
-            $table->dropColumn('education_level');
+            if (Schema::hasColumn('subjects', 'education_level')) {
+                $table->dropColumn('education_level');
+            }
         });
     }
 };
