@@ -27,12 +27,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
 WORKDIR /var/www/html
-
 # Install PHP dependencies (cache composer files for layer caching)
+# Copy composer files and minimal app folders Composer may scan so autoload
+# generation doesn't fail (e.g. database/seeders). This preserves cache
+# benefits while ensuring required paths exist at this layer.
 COPY composer.json composer.lock ./
+COPY app/ app/
+COPY database/ database/
+COPY routes/ routes/
+COPY config/ config/
+COPY bootstrap/ bootstrap/
+COPY resources/ resources/
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-progress
 
-# Copy application code
+# Copy remaining application code
 COPY . .
 
 # Copy built frontend assets from node-builder
