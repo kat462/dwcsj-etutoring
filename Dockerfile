@@ -1,43 +1,48 @@
+# Stage 1: build frontend assets using Node
+FROM node:18-alpine AS node-builder
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --silent
+COPY resources resources
+COPY vite.config.js .
+RUN npm run build
+
+# Stage 2: PHP runtime image
 FROM php:8.1-fpm
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     unzip \
-    curl \
     libzip-dev \
     libpng-dev \
     libonig-dev \
     libicu-dev \
     zlib1g-dev \
     libxml2-dev \
-    nodejs \
-    npm \
  && docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath intl gd \
  && rm -rf /var/lib/apt/lists/*
 
-# Install Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Copy composer binary from official Composer image
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
-# Set working directory
 WORKDIR /var/www/html
 
-# Copy composer files first for dependency install caching
+# Install PHP dependencies (cache composer files for layer caching)
 COPY composer.json composer.lock ./
-
-RUN composer install --no-dev --optimize-autoloader --no-interaction || true
-
-# Copy node files and build assets if present
-COPY package.json package-lock.json ./
-RUN if [ -f package.json ]; then npm install && npm run build; fi || true
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-progress
 
 # Copy application code
 COPY . .
 
+# Copy built frontend assets from node-builder
+# Adjust path if your build outputs elsewhere (e.g., public/build)
+COPY --from=node-builder /app/public/build public/build
+
 # Ensure storage & cache directories are writable
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache || true
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-EXPOSE 8080
+EXPOSE 9000
 
-# Default command: use $PORT if provided by platform
-CMD ["sh", "-lc", "php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
+# Run PHP-FPM in foreground
+CMD ["php-fpm", "-F"]
