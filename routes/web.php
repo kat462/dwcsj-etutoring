@@ -10,6 +10,8 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\TutorBookingController;
 use App\Http\Controllers\FeedbackController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,6 +35,31 @@ Route::get('/dashboard', function () {
 // Healthcheck endpoint for Railway (returns 200 OK)
 Route::get('/health', function () {
     return response('OK', 200);
+});
+
+// Temporary debug endpoint (protected by DEBUG_TOKEN env) to inspect
+// session/cookie and DB connectivity. Remove after troubleshooting.
+Route::get('/_debug', function (Request $request) {
+    $token = env('DEBUG_TOKEN');
+    if (!$token || $request->query('token') !== $token) {
+        abort(403);
+    }
+
+    try {
+        DB::connection()->getPdo();
+        $db = 'ok';
+    } catch (\Exception $e) {
+        $db = $e->getMessage();
+    }
+
+    return response()->json([
+        'app_url' => config('app.url'),
+        'session_driver' => config('session.driver'),
+        'session_domain' => config('session.domain'),
+        'session_cookie_name' => config('session.cookie'),
+        'request_cookie' => $request->cookie(config('session.cookie')),
+        'db' => $db,
+    ]);
 });
 
 // Role-based dashboards
