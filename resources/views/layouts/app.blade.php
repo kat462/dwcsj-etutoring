@@ -196,6 +196,11 @@
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
+
+                <!-- Mobile sidebar toggle (visible on small screens) -->
+                <button id="mobileSidebarToggle" class="btn btn-outline-light d-md-none ms-2" aria-label="Toggle sidebar">
+                    <i class="bi bi-list"></i>
+                </button>
                 
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto align-items-center">
@@ -239,42 +244,13 @@
                 @auth
                 <div class="col-md-3 col-lg-2 px-0 sidebar d-none d-md-block">
                     <div class="position-sticky">
-                        @if(Auth::user()->isAdmin())
-                            <a href="{{ route('admin.dashboard') }}" class="sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                                <i class="bi bi-speedometer2"></i> Dashboard
-                            </a>
-                        @elseif(Auth::user()->isTutor())
-                            <a href="{{ route('tutor.dashboard') }}" class="sidebar-link {{ request()->routeIs('tutor.dashboard') ? 'active' : '' }}">
-                                <i class="bi bi-speedometer2"></i> Dashboard
-                            </a>
-                            <a href="{{ route('tutor.profile.show') }}" class="sidebar-link {{ request()->routeIs('tutor.profile.*') ? 'active' : '' }}">
-                                <i class="bi bi-person-badge"></i> My Profile
-                            </a>
-                            <a href="{{ route('tutor.subjects') }}" class="sidebar-link {{ request()->routeIs('tutor.subjects*') ? 'active' : '' }}">
-                                <i class="bi bi-book"></i> My Subjects
-                            </a>
-                            <a href="{{ route('tutor.bookings') }}" class="sidebar-link {{ request()->routeIs('tutor.bookings*') ? 'active' : '' }}">
-                                <i class="bi bi-calendar-check"></i> Booking Requests
-                            </a>
-                        @else
-                            <a href="{{ route('student.dashboard') }}" class="sidebar-link {{ request()->routeIs('student.dashboard') ? 'active' : '' }}">
-                                <i class="bi bi-speedometer2"></i> Dashboard
-                            </a>
-                            <a href="{{ route('student.bookings') }}" class="sidebar-link {{ request()->routeIs('student.bookings*') ? 'active' : '' }}">
-                                <i class="bi bi-calendar-plus"></i> Request Session
-                            </a>
-                        @endif
-
-                        <hr class="my-3">
-                        <form method="POST" action="{{ route('logout') }}" class="px-3">
-                            @csrf
-                            <button type="submit" class="btn btn-outline-danger btn-sm w-100">
-                                <i class="bi bi-box-arrow-right me-1"></i> Logout
-                            </button>
-                        </form>
+                        @include('components.sidebar')
                     </div>
                 </div>
                 @endauth
+
+                    <!-- Mobile backdrop for sidebar overlay -->
+                    <div id="sidebarBackdrop" class="sidebar-backdrop d-md-none"></div>
 
                 <!-- Main Content -->
                     <main class="col-md-9 col-lg-10 px-md-4 py-4 content-layer">

@@ -256,3 +256,4 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (15,'2025_11_19_000
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (16,'2025_11_19_220000_create_availabilities_table',6);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (17,'2025_11_19_220001_create_bookings_table',6);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (18,'2025_11_19_230000_add_subject_id_to_bookings',6);
+

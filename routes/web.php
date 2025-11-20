@@ -38,41 +38,6 @@ Route::get('/health', function () {
     return response('OK', 200);
 });
 
-// Temporary debug endpoint (protected by DEBUG_TOKEN env) to inspect
-// session/cookie and DB connectivity. Remove after troubleshooting.
-Route::get('/_debug', function (Request $request) {
-    $token = env('DEBUG_TOKEN');
-    if (!$token || $request->query('token') !== $token) {
-        abort(403);
-    }
-
-    try {
-        DB::connection()->getPdo();
-        $db = 'ok';
-    } catch (\Exception $e) {
-        $db = $e->getMessage();
-    }
-
-    // Optional remote migration trigger (guarded by DEBUG_TOKEN).
-    if ($request->query('action') === 'migrate') {
-        try {
-            Artisan::call('migrate', ['--force' => true]);
-            $migrateOutput = Artisan::output();
-            return response()->json([ 'migrated' => true, 'output' => $migrateOutput ]);
-        } catch (\Exception $e) {
-            return response()->json([ 'migrated' => false, 'error' => $e->getMessage() ]);
-        }
-    }
-
-    return response()->json([
-        'app_url' => config('app.url'),
-        'session_driver' => config('session.driver'),
-        'session_domain' => config('session.domain'),
-        'session_cookie_name' => config('session.cookie'),
-        'request_cookie' => $request->cookie(config('session.cookie')),
-        'db' => $db,
-    ]);
-});
 
 // Role-based dashboards
 Route::middleware(['auth', 'role:tutee'])->group(function () {
