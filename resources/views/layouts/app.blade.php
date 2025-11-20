@@ -90,7 +90,47 @@
             
             .sidebar-link i {
                 margin-right: 0.75rem;
-                font-size: 1.1rem;
+                font-size: 1.05rem;
+            }
+
+            /* Sidebar avatar and typography */
+            .sidebar-avatar {
+                width: 44px;
+                height: 44px;
+                object-fit: cover;
+                border-radius: 8px;
+                display: inline-block;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+            }
+
+            .sidebar-user-name {
+                font-weight: 600;
+                font-size: 0.95rem;
+                color: #0f172a;
+                line-height: 1.1;
+            }
+
+            .sidebar-user-role {
+                font-size: 0.8rem;
+                color: #64748b;
+                margin-top: 0.1rem;
+            }
+
+            .sidebar-link {
+                display: flex;
+                align-items: center;
+                gap: 0.6rem;
+                padding: 0.65rem 1.25rem;
+                color: #475569;
+                text-decoration: none;
+                transition: all 0.15s ease;
+                border-left: 3px solid transparent;
+                font-size: 0.95rem;
+            }
+
+            .sidebar-link-text {
+                display: inline-block;
+                vertical-align: middle;
             }
             
             .card-modern {
