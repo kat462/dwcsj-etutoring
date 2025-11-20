@@ -9,6 +9,7 @@ use App\Models\Availability;
 use App\Models\Booking;
 use App\Models\Feedback;
 use App\Models\TutorProfile;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Class User
@@ -35,6 +36,26 @@ class User extends Authenticatable {
     public function givenFeedback(){ return $this->feedbacksGiven(); }
     public function receivedFeedback(){ return $this->feedbacksReceived(); }
     public function profile(){ return $this->hasOne(TutorProfile::class); }
+
+    // Schema-aware profile accessor: some DBs use `user_id` or `tutor_id`.
+    // Use an accessor to avoid Eloquent building a relation query that
+    // references a missing column (which causes SQL errors in production).
+    public function getProfileAttribute()
+    {
+        if (!Schema::hasTable('tutor_profiles')) {
+            return null;
+        }
+
+        if (Schema::hasColumn('tutor_profiles', 'user_id')) {
+            return TutorProfile::where('user_id', $this->id)->first();
+        }
+
+        if (Schema::hasColumn('tutor_profiles', 'tutor_id')) {
+            return TutorProfile::where('tutor_id', $this->id)->first();
+        }
+
+        return null;
+    }
 
     // Role helpers
     public function isAdmin(): bool { return $this->role === 'admin'; }
