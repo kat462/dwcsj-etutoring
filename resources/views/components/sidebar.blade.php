@@ -68,11 +68,13 @@
                 <i class="bi bi-calendar-plus"></i>
                 <span class="sidebar-link-text">Request Session</span>
             </a>
-            <a href="{{ url('/student/calendar') }}" class="sidebar-link {{ request()->routeIs('student.tutor.calendar') ? 'active' : '' }}">
+            <!-- Use bookings index as canonical student calendar view to avoid broken legacy links -->
+            <a href="{{ route('student.bookings') }}" class="sidebar-link {{ request()->routeIs('student.bookings*') ? 'active' : '' }}">
                 <i class="bi bi-calendar3"></i>
                 <span class="sidebar-link-text">Calendar</span>
             </a>
-            <a href="{{ url('/student/feedback') }}" class="sidebar-link">
+            <!-- Feedback is per-booking; link to bookings list to see feedback entry points -->
+            <a href="{{ route('student.bookings') }}" class="sidebar-link">
                 <i class="bi bi-chat-left-text"></i>
                 <span class="sidebar-link-text">Feedback</span>
             </a>

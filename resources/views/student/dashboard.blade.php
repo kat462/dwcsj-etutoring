@@ -85,13 +85,13 @@
 
         <!-- Quick Actions -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <a href="/bookings/create" class="bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 text-center">
+            <a href="/tutors" class="bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 text-center">
                 📚 Book a Tutor
             </a>
             <a href="/tutors" class="bg-gradient-to-r from-blue-400 to-indigo-500 hover:from-blue-500 hover:to-indigo-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 text-center">
                 🔍 Browse Tutors
             </a>
-            <a href="/calendar" class="bg-gradient-to-r from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 text-center">
+            <a href="{{ route('student.bookings') }}" class="bg-gradient-to-r from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 text-center">
                 📅 View Calendar
             </a>
         </div>
@@ -215,8 +215,8 @@
                                             @endif
                                         </div>
                                     </div>
-                                    <a href="/bookings/create?tutor_id={{ $tutor->id }}" class="block w-full text-center bg-green-100 hover:bg-green-200 text-green-800 font-medium py-2 rounded transition">
-                                        Book Again
+                                    <a href="{{ route('tutors.show', $tutor->id) }}" class="block w-full text-center bg-green-100 hover:bg-green-200 text-green-800 font-medium py-2 rounded transition">
+                                        View Profile / Book
                                     </a>
                                 </div>
                             @endforeach

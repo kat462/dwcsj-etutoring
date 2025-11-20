@@ -68,11 +68,12 @@
             .sidebar-link {
                 display: flex;
                 align-items: center;
-                padding: 0.75rem 1.5rem;
-                color: #475569;
+                padding: 0.65rem 1.25rem;
+                color: #0f172a; /* stronger contrast for readability */
                 text-decoration: none;
-                transition: all 0.2s;
+                transition: all 0.15s ease;
                 border-left: 3px solid transparent;
+                font-size: 0.95rem;
             }
             
             .sidebar-link:hover {
@@ -89,8 +90,11 @@
             }
             
             .sidebar-link i {
-                margin-right: 0.75rem;
-                font-size: 1.05rem;
+                margin-right: 0.5rem;
+                font-size: 0.95rem; /* reduce icon size */
+                width: 1.05rem;
+                text-align: center;
+                color: inherit;
             }
 
             /* Sidebar avatar and typography */
@@ -121,7 +125,7 @@
                 align-items: center;
                 gap: 0.6rem;
                 padding: 0.65rem 1.25rem;
-                color: #475569;
+                color: #0f172a;
                 text-decoration: none;
                 transition: all 0.15s ease;
                 border-left: 3px solid transparent;
@@ -226,7 +230,17 @@
         <!-- Navigation -->
         <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
             <div class="container-fluid px-4">
-                <a class="navbar-brand d-flex align-items-center" href="/">
+                @auth
+                    @php
+                        $brandHref = auth()->user()->isAdmin()
+                            ? route('admin.dashboard')
+                            : (auth()->user()->isTutor() ? route('tutor.dashboard') : route('student.dashboard'));
+                    @endphp
+                @else
+                    @php $brandHref = url('/'); @endphp
+                @endauth
+
+                <a class="navbar-brand d-flex align-items-center" href="{{ $brandHref }}">
                     <span class="navbar-logo-badge">
                         <img src="{{ asset('images/DWCSJ_Seal.png') }}" alt="DWCSJ" class="navbar-logo">
                     </span>

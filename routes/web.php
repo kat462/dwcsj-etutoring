@@ -38,6 +38,36 @@ Route::get('/health', function () {
     return response('OK', 200);
 });
 
+// Backwards-compatible redirects for legacy/quick links to avoid 404s
+// these keep older UI links working and point to meaningful pages
+Route::get('/tutors', function () {
+    return redirect()->route('student.bookings');
+});
+
+// Generic calendar link (legacy) -> student's bookings/calendar page
+Route::get('/calendar', function () {
+    return redirect()->route('student.bookings');
+});
+
+// Legacy create bookings link — redirect to the tutor profile if tutor_id provided,
+// otherwise go to bookings index for the student.
+Route::get('/bookings/create', function (Request $request) {
+    $tutorId = $request->query('tutor_id');
+    if ($tutorId) {
+        return redirect()->route('tutors.show', ['id' => $tutorId]);
+    }
+    return redirect()->route('student.bookings');
+});
+
+// Backwards-compatible student calendar/feedback shorthand routes
+Route::get('/student/calendar', function () {
+    return redirect()->route('student.bookings');
+});
+
+Route::get('/student/feedback', function () {
+    return redirect()->route('student.bookings');
+});
+
 
 // Role-based dashboards
 Route::middleware(['auth', 'role:tutee'])->group(function () {
