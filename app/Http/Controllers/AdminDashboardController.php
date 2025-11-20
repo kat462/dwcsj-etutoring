@@ -158,19 +158,10 @@ class AdminDashboardController extends Controller
         $subjects = Subject::withCount('bookings')
             ->orderBy('bookings_count', 'desc')
             ->limit(5)
-            ->get()
-            ->pluck('name', 'bookings_count')
-            ->toArray();
+            ->get();
 
-        if (empty($subjects)) {
-            return ['labels' => [], 'data' => []];
-        }
-
-        $labels = array_values($subjects);
-        $data = array_keys($subjects);
-
-        // Sort by data ascending for horizontal bar chart
-        array_multisort($data, SORT_ASC, $labels);
+        $labels = $subjects->pluck('name')->toArray();
+        $data = $subjects->pluck('bookings_count')->toArray();
 
         return [
             'labels' => $labels,
@@ -181,7 +172,7 @@ class AdminDashboardController extends Controller
     // Get recent bookings (last 10)
     private function getRecentBookings()
     {
-        return Booking::with(['student', 'tutor', 'subject'])
+        return Booking::with(['tutee', 'tutor', 'subject'])
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
@@ -198,7 +189,7 @@ class AdminDashboardController extends Controller
                 $feedbackCount = $tutor->feedbacks()->count();
                 return (object)[
                     'id' => $tutor->id,
-                    'name' => $tutor->first_name . ' ' . $tutor->last_name,
+                    'name' => $tutor->name,
                     'rating' => round($avgRating, 1),
                     'feedbacks' => $feedbackCount
                 ];

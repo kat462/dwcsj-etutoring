@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Availability;
 use App\Models\Feedback;
 use App\Models\Subject;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Class Booking
@@ -60,6 +61,35 @@ class Booking extends Model
     public function getSessionDateAttribute()
     {
         return $this->scheduled_at ? $this->scheduled_at : null;
+    }
+
+    // Return which column stores the tutee/student foreign key (tutee_id or student_id)
+    public static function tuteeKey()
+    {
+        if (Schema::hasColumn('bookings', 'tutee_id')) {
+            return 'tutee_id';
+        }
+
+        if (Schema::hasColumn('bookings', 'student_id')) {
+            return 'student_id';
+        }
+
+        // default to tutee_id if schema unknown
+        return 'tutee_id';
+    }
+
+    // Provide an accessor so $booking->tutee_id works even if DB column is student_id
+    public function getTuteeIdAttribute()
+    {
+        if (array_key_exists('tutee_id', $this->attributes)) {
+            return $this->attributes['tutee_id'];
+        }
+
+        if (array_key_exists('student_id', $this->attributes)) {
+            return $this->attributes['student_id'];
+        }
+
+        return null;
     }
 }
  

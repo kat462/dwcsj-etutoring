@@ -30,6 +30,8 @@ class User extends Authenticatable {
     public function bookingsAsTutor(){ return $this->hasMany(Booking::class,'tutor_id'); }
     public function feedbacksGiven(){ return $this->hasMany(Feedback::class,'tutee_id'); }
     public function feedbacksReceived(){ return $this->hasMany(Feedback::class,'tutor_id'); }
+    // Backwards-compatible alias expected by some controllers
+    public function feedbacks(){ return $this->feedbacksReceived(); }
     public function givenFeedback(){ return $this->feedbacksGiven(); }
     public function receivedFeedback(){ return $this->feedbacksReceived(); }
     public function profile(){ return $this->hasOne(TutorProfile::class); }

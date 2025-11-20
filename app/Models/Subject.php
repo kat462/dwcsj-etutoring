@@ -10,4 +10,12 @@ class Subject extends Model
     {
         return $this->belongsToMany(User::class, 'subject_user', 'subject_id', 'user_id');
     }
+
+    /**
+     * Bookings for this subject
+     */
+    public function bookings()
+    {
+        return $this->hasMany(\App\Models\Booking::class, 'subject_id');
+    }
 }

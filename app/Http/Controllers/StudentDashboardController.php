@@ -49,7 +49,7 @@ class StudentDashboardController extends Controller
     // Get count of upcoming sessions (next 7 days)
     private function getUpcomingSessionsCount($student)
     {
-        return Booking::where('student_id', $student->id)
+        return Booking::where(Booking::tuteeKey(), $student->id)
             ->where('status', '=', 'accepted')
             ->whereBetween('scheduled_at', [Carbon::now(), Carbon::now()->addDays(7)])
             ->count();
@@ -58,7 +58,7 @@ class StudentDashboardController extends Controller
     // Get count of pending requests (awaiting tutor response)
     private function getPendingRequestsCount($student)
     {
-        return Booking::where('student_id', $student->id)
+        return Booking::where(Booking::tuteeKey(), $student->id)
             ->where('status', '=', 'pending')
             ->count();
     }
@@ -66,7 +66,7 @@ class StudentDashboardController extends Controller
     // Get count of completed sessions
     private function getCompletedSessionsCount($student)
     {
-        return Booking::where('student_id', $student->id)
+        return Booking::where(Booking::tuteeKey(), $student->id)
             ->where('status', '=', 'completed')
             ->count();
     }
@@ -74,13 +74,14 @@ class StudentDashboardController extends Controller
     // Get count of feedback given
     private function getFeedbackGivenCount($student)
     {
-        return Feedback::where('student_id', $student->id)->count();
+        // Feedback model may use tutee_id; assume column exists as-is
+        return Feedback::where('tutee_id', $student->id)->count();
     }
 
     // Get pending bookings (awaiting tutor response)
     private function getPendingBookings($student)
     {
-        return Booking::where('student_id', $student->id)
+        return Booking::where(Booking::tuteeKey(), $student->id)
             ->where('status', 'pending')
             ->with(['tutor', 'subject'])
             ->orderBy('created_at', 'desc')
@@ -91,7 +92,7 @@ class StudentDashboardController extends Controller
     // Get scheduled/accepted bookings for next 30 days
     private function getScheduledBookings($student)
     {
-        return Booking::where('student_id', $student->id)
+        return Booking::where(Booking::tuteeKey(), $student->id)
             ->where('status', 'accepted')
             ->whereBetween('scheduled_at', [Carbon::now(), Carbon::now()->addDays(30)])
             ->with(['tutor', 'subject'])
@@ -103,10 +104,10 @@ class StudentDashboardController extends Controller
     // Get recently completed bookings
     private function getCompletedBookings($student)
     {
-        return Booking::where('student_id', $student->id)
+        return Booking::where(Booking::tuteeKey(), $student->id)
             ->where('status', 'completed')
             ->with(['tutor', 'subject', 'feedback'])
-            ->orderBy('completed_at', 'desc')
+            ->orderBy('updated_at', 'desc')
             ->limit(5)
             ->get();
     }
@@ -121,7 +122,7 @@ class StudentDashboardController extends Controller
             $date = Carbon::now()->subMonths($i);
             $months[] = $date->format('M Y');
 
-            $count = Booking::where('student_id', $student->id)
+            $count = Booking::where(Booking::tuteeKey(), $student->id)
                 ->whereYear('scheduled_at', $date->year)
                 ->whereMonth('scheduled_at', $date->month)
                 ->where('status', 'completed')
@@ -139,19 +140,19 @@ class StudentDashboardController extends Controller
     // Get sessions by status (for doughnut chart)
     private function getSessionsByStatus($student)
     {
-        $pending = Booking::where('student_id', $student->id)
+        $pending = Booking::where(Booking::tuteeKey(), $student->id)
             ->where('status', 'pending')
             ->count();
 
-        $scheduled = Booking::where('student_id', $student->id)
+        $scheduled = Booking::where(Booking::tuteeKey(), $student->id)
             ->where('status', 'accepted')
             ->count();
 
-        $completed = Booking::where('student_id', $student->id)
+        $completed = Booking::where(Booking::tuteeKey(), $student->id)
             ->where('status', 'completed')
             ->count();
 
-        $cancelled = Booking::where('student_id', $student->id)
+        $cancelled = Booking::where(Booking::tuteeKey(), $student->id)
             ->where('status', 'cancelled')
             ->count();
 
@@ -170,16 +171,15 @@ class StudentDashboardController extends Controller
     // Get recently interacted tutors (last 3)
     private function getRecentTutors($student)
     {
-        return Booking::where('student_id', $student->id)
-            ->distinct('tutor_id')
+        return Booking::where(Booking::tuteeKey(), $student->id)
             ->with('tutor')
             ->orderBy('created_at', 'desc')
-            ->limit(3)
             ->get()
             ->map(function ($booking) {
                 return $booking->tutor;
             })
             ->unique('id')
+            ->take(3)
             ->values();
     }
 }
