@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Mobile sidebar overlay behavior when toggled */
+@media (max-width: 767.98px) {
+	body.sidebar-open .sidebar {
+		display: block !important;
+		position: fixed;
+		top: 56px;
+		left: 0;
+		width: 260px;
+		height: calc(100% - 56px);
+		z-index: 1050;
+		background: white;
+		box-shadow: 0 8px 30px rgba(2,6,23,0.15);
+		overflow-y: auto;
+	}
+
+	body.sidebar-open .main-content-wrapper {
+		filter: blur(0.8px);
+		pointer-events: none;
+	}
+
+	.sidebar-backdrop {
+		display: none;
+		position: fixed;
+		inset: 56px 0 0 0;
+		background: rgba(0,0,0,0.35);
+		z-index: 1040;
+	}
+
+	body.sidebar-open .sidebar-backdrop { display: block; }
+}
