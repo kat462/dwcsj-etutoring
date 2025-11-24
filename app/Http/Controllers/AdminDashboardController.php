@@ -2,39 +2,39 @@
 
 namespace App\Http\Controllers;
 
+
 use App\Models\User;
 use App\Models\Booking;
-use App\Models\Feedback;
 use App\Models\Subject;
-use App\Models\TutorProfile;
-use Carbon\Carbon;
+use App\Services\DashboardMetricsService;
 
 class AdminDashboardController extends Controller
 {
+    protected $metrics;
+
+    public function __construct(DashboardMetricsService $metrics)
+    {
+        $this->metrics = $metrics;
+    }
+
     public function index()
     {
-        // Get all metrics and data for dashboard
-        $totalUsers = $this->getTotalUsers();
-        $totalTutors = $this->getTotalTutors();
-        $totalStudents = $this->getTotalStudents();
-        $totalSessions = $this->getTotalSessions();
-        $totalFeedback = $this->getTotalFeedback();
-        $averagePlatformRating = $this->getAveragePlatformRating();
+        // Use shared metrics service for common metrics
+        $totalUsers = $this->metrics->getTotalUsers();
+        $totalTutors = $this->metrics->getTotalTutors();
+        $totalStudents = $this->metrics->getTotalStudents();
+        $totalSessions = $this->metrics->getTotalSessions();
+        $totalFeedback = $this->metrics->getTotalFeedback();
+        $averagePlatformRating = $this->metrics->getAveragePlatformRating();
+        $sessionsByStatus = $this->metrics->getSessionsByStatus();
+        $monthlySessionsData = $this->metrics->getMonthlySessions();
 
-        // Session breakdown
-        $sessionsByStatus = $this->getSessionsByStatus();
-
-        // Charts
-        $monthlySessionsData = $this->getMonthlySessions();
+        // The following remain as controller-specific for now
         $statusData = $this->getSessionsStatusChart();
         $subjectsData = $this->getTopSubjects();
-
-        // Tables
         $recentBookings = $this->getRecentBookings();
         $topTutors = $this->getTopTutors();
         $topSubjects = $this->getMostRequestedSubjects();
-
-        // Education level breakdown
         $educationBreakdown = $this->getEducationLevelBreakdown();
 
         return view('admin.dashboard', compact(
@@ -56,81 +56,7 @@ class AdminDashboardController extends Controller
     }
 
     // Get total user count
-    private function getTotalUsers()
-    {
-        return User::count();
-    }
-
-    // Get total tutor count
-    private function getTotalTutors()
-    {
-        return User::where('role', 'tutor')->count();
-    }
-
-    // Get total student count
-    private function getTotalStudents()
-    {
-        return User::where('role', 'tutee')->count();
-    }
-
-    // Get total session count
-    private function getTotalSessions()
-    {
-        return Booking::count();
-    }
-
-    // Get total feedback count
-    private function getTotalFeedback()
-    {
-        return Feedback::count();
-    }
-
-    // Get average rating across platform
-    private function getAveragePlatformRating()
-    {
-        $average = Feedback::avg('rating');
-        return $average ? number_format($average, 1) : '0.0';
-    }
-
-    // Get sessions breakdown by status
-    private function getSessionsByStatus()
-    {
-        $pending = Booking::where('status', 'pending')->count();
-        $accepted = Booking::where('status', 'accepted')->count();
-        $completed = Booking::where('status', 'completed')->count();
-        $cancelled = Booking::where('status', 'cancelled')->count();
-
-        return [
-            'pending' => $pending,
-            'accepted' => $accepted,
-            'completed' => $completed,
-            'cancelled' => $cancelled,
-            'total' => $pending + $accepted + $completed + $cancelled
-        ];
-    }
-
-    // Get monthly sessions for last 6 months
-    private function getMonthlySessions()
-    {
-        $months = [];
-        $data = [];
-
-        for ($i = 5; $i >= 0; $i--) {
-            $date = Carbon::now()->subMonths($i);
-            $months[] = $date->format('M Y');
-
-            $count = Booking::whereYear('scheduled_at', $date->year)
-                ->whereMonth('scheduled_at', $date->month)
-                ->count();
-
-            $data[] = $count;
-        }
-
-        return [
-            'labels' => $months,
-            'data' => $data
-        ];
-    }
+    // ...existing code for controller-specific metrics...
 
     // Get sessions by status for chart
     private function getSessionsStatusChart()

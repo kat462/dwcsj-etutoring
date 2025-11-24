@@ -8,9 +8,16 @@ use App\Models\Feedback;
 use App\Models\Subject;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use App\Services\DashboardMetricsService;
 
 class TutorDashboardController extends Controller
 {
+    protected $metrics;
+
+    public function __construct(DashboardMetricsService $metrics)
+    {
+        $this->metrics = $metrics;
+    }
     /**
      * Show tutor dashboard with metrics and widgets
      */
@@ -34,7 +41,7 @@ class TutorDashboardController extends Controller
         $weeklyData = $this->getWeeklyActivity($tutor);
         
         // Monthly trend data
-        $monthlyTrend = $this->getMonthlySessions($tutor);
+        $monthlyTrend = $this->metrics->getMonthlySessions($tutor);
         
         // Subject popularity
         $subjectStats = $this->getSubjectStats($tutor);

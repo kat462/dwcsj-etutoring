@@ -8,16 +8,6 @@ class AdminUserSeeder extends Seeder
 {
     public function run()
     {
-        User::updateOrCreate(
-            ['student_id' => 'ADMIN001'],
-            [
-                'name' => 'Site Admin',
-                'email' => 'admin@example.test',
-                'role' => 'admin',
-                'education_level' => 'college',
-                'password' => 'AdminPass123!',
-                'is_active' => 1,
-            ]
-        );
+        // Only 1 admin should exist, handled in DatabaseSeeder
     }
 }

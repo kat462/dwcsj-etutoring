@@ -7,9 +7,16 @@ use App\Models\Feedback;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use App\Services\DashboardMetricsService;
 
 class StudentDashboardController extends Controller
 {
+    protected $metrics;
+
+    public function __construct(DashboardMetricsService $metrics)
+    {
+        $this->metrics = $metrics;
+    }
     public function index()
     {
         $student = Auth::user();
@@ -26,7 +33,7 @@ class StudentDashboardController extends Controller
         $completedBookings = $this->getCompletedBookings($student);
 
         // Charts
-        $monthlyData = $this->getMonthlySessions($student);
+        $monthlyData = $this->metrics->getMonthlySessions($student);
         $statusData = $this->getSessionsByStatus($student);
 
         // Recent tutors
