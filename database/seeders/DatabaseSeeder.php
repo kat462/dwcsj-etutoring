@@ -16,16 +16,42 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create/Update admin (id: ADMIN001 / password: adpass123)
+        // Create/Update admin (id: ADMIN, password: password)
         User::updateOrCreate(
-            [
-                'student_id' => 'ADMIN001',
-            ],
+            [ 'student_id' => 'ADMIN', ],
             [
                 'name' => 'System Administrator',
                 'email' => 'admin@dwcsj.edu.ph',
                 'role' => 'admin',
-                'password' => Hash::make('adpass123'),
+                'is_active' => 1,
+                'email_verified_at' => now(),
+                'password' => Hash::make('password'),
+            ]
+        );
+
+        // Create/Update tutee (id: STUD001, password: password)
+        User::updateOrCreate(
+            [ 'student_id' => 'STUD001', ],
+            [
+                'name' => 'Sample Tutee',
+                'email' => 'tutee@dwcsj.edu.ph',
+                'role' => 'tutee',
+                'is_active' => 1,
+                'email_verified_at' => now(),
+                'password' => Hash::make('password'),
+            ]
+        );
+
+        // Create/Update tutor (id: TUT001, password: password)
+        User::updateOrCreate(
+            [ 'student_id' => 'TUT001', ],
+            [
+                'name' => 'Sample Tutor',
+                'email' => 'tutor@dwcsj.edu.ph',
+                'role' => 'tutor',
+                'is_active' => 1,
+                'email_verified_at' => now(),
+                'password' => Hash::make('password'),
             ]
         );
 
