@@ -29,26 +29,25 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Seed allowed student IDs (2 only)
+        // Use SubjectSeeder for up-to-date subjects and education levels
         $this->call([
-            AllowedStudentIdsSeeder::class,
+            SubjectSeeder::class,
+            SampleDataSeeder::class,
         ]);
 
-        // Create default subjects
-        $subjects = [
-            'Mathematics',
-            'Science',
-            'English',
-            'Computer Studies',
-            'Accounting',
-        ];
+        // Demo tutors
+        \App\Models\User::factory(5)->create(['role' => 'tutor']);
+        // Demo tutees
+        \App\Models\User::factory(10)->create(['role' => 'tutee']);
 
-        foreach ($subjects as $subject) {
-            Subject::create(['name' => $subject]);
-        }
+        // Demo bookings (randomly assigned)
+        \App\Models\Booking::factory(15)->create();
+
+        // Demo feedback (randomly assigned to bookings)
+        \App\Models\Feedback::factory(10)->create();
 
         $this->command->info('✅ Database seeded successfully!');
         $this->command->info('  - Admin    → ID: ADMIN001,   Password: adpass123');
-        $this->command->info('  - Allowed Student IDs: DWC001, DWC002');
+        $this->command->info('  - 5 tutors, 10 tutees, 15 bookings, 10 feedback records');
     }
 }

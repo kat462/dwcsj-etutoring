@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" style="height: 100%;">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -17,6 +17,46 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <!-- FullCalendar CSS & JS -->
+        <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+        <script>
+            window.Laravel = {
+                userId: {{ Auth::check() ? Auth::id() : 'null' }}
+            };
+        </script>
+        <script>
+        // Real-time update for notifications dropdown
+        window.updateNotificationsDropdown = function(notification) {
+            const notifList = document.getElementById('notif-list');
+            if (!notifList) return;
+            // Create notification item
+            let html = `<div class=\"dropdown-item d-flex align-items-start bg-light border-bottom\">` +
+                `<i class=\"bi bi-bell-fill text-primary me-2\" style=\"font-size:1.1rem;\"></i>` +
+                `<div class=\"flex-fill\">` +
+                `<div class=\"fw-semibold\">${notification.message || 'Notification'}</div>` +
+                (notification.subject ? `<div class=\"small text-muted\">Subject: ${notification.subject}</div>` : '') +
+                (notification.scheduled_at ? `<div class=\"small text-muted\">Date: ${new Date(notification.scheduled_at).toLocaleString()}</div>` : '') +
+                `<div class=\"small text-muted\">just now</div>` +
+                `</div></div>`;
+            // Remove 'no notifications' message if present
+            let empty = notifList.querySelector('.text-center.text-muted');
+            if (empty) empty.remove();
+            notifList.insertAdjacentHTML('afterbegin', html);
+            // Update badge count
+            let bell = document.getElementById('notifDropdown');
+            let badge = bell.querySelector('.badge');
+            if (badge) {
+                let count = parseInt(badge.textContent) || 0;
+                badge.textContent = count + 1;
+            } else {
+                bell.insertAdjacentHTML('beforeend', '<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">1</span>');
+            }
+        };
+        </script>
+        <!-- Pusher/Echo for real-time notifications -->
+        <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.11.3/dist/echo.iife.js"></script>
         
         <style>
             :root {
@@ -59,65 +99,73 @@
             }
             
             .sidebar {
-                background: white;
+                background: linear-gradient(135deg, #f8fafc 60%, #e0fbe5 100%);
                 min-height: calc(100vh - 56px);
                 border-right: 1px solid #e2e8f0;
-                padding: 1.5rem 0;
+                padding: 2.2rem 0 1.5rem 0;
+                border-radius: 18px 0 0 18px;
+                box-shadow: 2px 0 16px 0 rgba(22,163,74,0.06);
+                margin: 1rem 0 1rem 0.5rem;
             }
             
             .sidebar-link {
                 display: flex;
                 align-items: center;
-                padding: 0.65rem 1.25rem;
-                color: #0f172a; /* stronger contrast for readability */
+                gap: 0.7rem;
+                padding: 0.7rem 1.35rem 0.7rem 1.35rem;
+                color: #0f172a;
                 text-decoration: none;
-                transition: all 0.15s ease;
+                transition: all 0.18s cubic-bezier(.4,0,.2,1);
                 border-left: 3px solid transparent;
-                font-size: 0.95rem;
+                font-size: 1.01rem;
+                border-radius: 0 8px 8px 0;
+                margin-bottom: 0.1rem;
             }
-            
             .sidebar-link:hover {
-                background-color: #f1f5f9;
+                background-color: #e0fbe5;
                 color: var(--primary-color);
                 border-left-color: var(--primary-color);
+                box-shadow: 0 2px 8px rgba(22,163,74,0.07);
             }
-            
             .sidebar-link.active {
-                background-color: #eff6ff;
-                color: var(--primary-color);
-                border-left-color: var(--primary-color);
-                font-weight: 600;
+                background-color: #bbf7d0;
+                color: #15803d;
+                border-left-color: #16a34a;
+                font-weight: 700;
+                box-shadow: 0 2px 12px rgba(22,163,74,0.10);
             }
-            
             .sidebar-link i {
                 margin-right: 0.5rem;
-                font-size: 0.95rem; /* reduce icon size */
-                width: 1.05rem;
+                font-size: 1.1rem;
+                width: 1.25rem;
                 text-align: center;
                 color: inherit;
             }
 
             /* Sidebar avatar and typography */
             .sidebar-avatar {
-                width: 44px;
-                height: 44px;
+                width: 92px;
+                height: 92px;
                 object-fit: cover;
-                border-radius: 8px;
+                border-radius: 20px;
                 display: inline-block;
-                box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+                box-shadow: 0 2px 8px rgba(22,163,74,0.10);
+                background: #fff;
             }
 
             .sidebar-user-name {
-                font-weight: 600;
-                font-size: 0.95rem;
-                color: #0f172a;
+                font-weight: 700;
+                font-size: 1.08rem;
+                color: #15803d;
                 line-height: 1.1;
+                margin-bottom: 0.1rem;
             }
 
             .sidebar-user-role {
-                font-size: 0.8rem;
+                font-size: 0.85rem;
                 color: #64748b;
                 margin-top: 0.1rem;
+                letter-spacing: 0.5px;
             }
 
             .sidebar-link {
@@ -149,15 +197,17 @@
                 box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             }
             
+            .btn-primary-custom, .btn, .btn-primary, .btn-outline-primary, .btn-outline-secondary, .btn-success, .btn-danger, .btn-outline-danger, .btn-secondary {
+                border-radius: 8px !important;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+                font-weight: 500;
+                transition: all 0.18s cubic-bezier(.4,0,.2,1);
+            }
             .btn-primary-custom {
                 background: var(--primary-color);
                 border: none;
                 padding: 0.6rem 1.5rem;
-                border-radius: 8px;
-                font-weight: 500;
-                transition: all 0.2s;
             }
-            
             .btn-primary-custom:hover {
                 background: #1d4ed8;
                 transform: translateY(-1px);
@@ -183,6 +233,7 @@
                 .main-content-wrapper {
                     position: relative;
                     min-height: calc(100vh - 56px - 60px);
+                    padding-bottom: 3.5rem; /* Prevent footer overlap */
                 }
 
                 .main-content-wrapper::before {
@@ -225,8 +276,9 @@
                     color: var(--secondary-color);
                 }
         </style>
+        @stack('head')
     </head>
-    <body>
+    <body style="min-height: 100vh; display: flex; flex-direction: column;">
         <!-- Navigation -->
         <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
             <div class="container-fluid px-4">
@@ -260,22 +312,22 @@
             </div>
         </nav>
 
-        <div class="container-fluid main-content-wrapper">
-            <div class="row">
+        <div class="container-fluid main-content-wrapper" style="flex: 1 0 auto;">
+            <div class="row flex-nowrap" style="min-height: calc(100vh - 56px);">
                 <!-- Sidebar -->
                 @auth
-                <div class="col-md-3 col-lg-2 px-0 sidebar d-none d-md-block">
+                <div class="col-md-3 col-lg-2 px-0 sidebar d-none d-md-flex flex-column align-items-stretch">
                     <div class="position-sticky">
                         @include('components.sidebar')
                     </div>
                 </div>
                 @endauth
 
-                    <!-- Mobile backdrop for sidebar overlay -->
-                    <div id="sidebarBackdrop" class="sidebar-backdrop d-md-none"></div>
+                <!-- Mobile backdrop for sidebar overlay -->
+                <div id="sidebarBackdrop" class="sidebar-backdrop d-md-none"></div>
 
                 <!-- Main Content -->
-                    <main class="col-md-9 col-lg-10 px-md-4 py-3 content-layer">
+                <main class="col px-0 px-md-4 py-3 content-layer d-flex flex-column">
                     @yield('content')
                 </main>
             </div>
@@ -302,5 +354,6 @@
 
         <!-- Bootstrap JS -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        @stack('scripts')
     </body>
 </html>

@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 
+
 class UserController extends Controller
 {
     public function __construct()
@@ -13,13 +14,39 @@ class UserController extends Controller
     }
 
     /**
+     * Bulk delete selected users (soft-delete)
+     */
+    public function bulkDelete(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (empty($ids)) {
+            return back()->with('error', 'No users selected.');
+        }
+        $deleted = User::whereIn('id', $ids)->delete();
+        return back()->with('success', ($deleted ?: count($ids)) . ' users deleted.');
+    }
+
+    /**
+     * Bulk restore selected users (from trashed)
+     */
+    public function bulkRestore(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (empty($ids)) {
+            return back()->with('error', 'No users selected.');
+        }
+        $restored = User::withTrashed()->whereIn('id', $ids)->restore();
+        return back()->with('success', ($restored ?: count($ids)) . ' users restored.');
+    }
+
+    /**
      * Display a listing of users with filters and search.
      */
     public function index(Request $request)
     {
         $show = $request->query('show','active'); // active|trashed|all
-        $roleFilter = $request->query('role','both'); // tutor|tutee|both
-        $education = $request->query('education_level', null); // kindergarten|elementary|junior_high|senior_high|college|other
+        $role = $request->query('role','both'); // tutor|tutee|both
+        $education = $request->query('education_level', '');
         $search = $request->query('q', null);
 
         $query = User::query();
@@ -29,9 +56,9 @@ class UserController extends Controller
             $query = User::withTrashed();
         }
 
-        if ($roleFilter === 'tutor') {
+        if ($role === 'tutor') {
             $query->where('role','tutor');
-        } elseif ($roleFilter === 'tutee') {
+        } elseif ($role === 'tutee') {
             $query->where('role','tutee');
         }
 
@@ -50,16 +77,35 @@ class UserController extends Controller
         $users = $query->orderBy('name')->paginate(50);
         $users->appends($request->query());
 
-        return view('admin.users.index', compact('users','show','roleFilter','education','search'));
+        return view('admin.users.index', compact('users','show','role','education','search'));
+    }
+
+
+    /**
+     * Soft-delete or permanently delete a user
+     */
+    public function destroy($id)
+    {
+        $user = User::withTrashed()->findOrFail($id);
+        if ($user->trashed()) {
+            $user->forceDelete();
+            return back()->with('success', 'User permanently deleted.');
+        } else {
+            $user->delete();
+            return back()->with('success', 'User soft-deleted.');
+        }
     }
 
     /**
-     * Soft-delete a user
+     * Toggle user active/inactive status
      */
-    public function destroy(User $user)
+    public function toggleActive($id)
     {
-        $user->delete();
-        return back()->with('success','User soft-deleted.');
+        $user = User::withTrashed()->findOrFail($id);
+        $user->is_active = !$user->is_active;
+        $user->save();
+        $status = $user->is_active ? 'activated' : 'deactivated';
+        return back()->with('success', "User {$status} successfully.");
     }
 
     /**

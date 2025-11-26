@@ -8,6 +8,28 @@ use Illuminate\Support\Facades\Auth;
 
 class AvailabilityController extends Controller
 {
+    public function update(Request $request, $id)
+    {
+        $availability = Availability::findOrFail($id);
+        $this->authorize('update', $availability);
+        $request->validate([
+            'date' => 'required|date',
+            'start_time' => 'required',
+            'end_time' => 'required',
+        ]);
+        $availability->update([
+            'date' => $request->date,
+            'start_time' => $request->start_time,
+            'end_time' => $request->end_time,
+        ]);
+        return redirect()->route('tutor.availabilities.index')->with('success', 'Availability updated!');
+    }
+    public function edit($id)
+    {
+        $availability = Availability::findOrFail($id);
+        $this->authorize('update', $availability);
+        return view('tutor.availabilities.edit', compact('availability'));
+    }
     public function index()
     {
         $user = Auth::user();

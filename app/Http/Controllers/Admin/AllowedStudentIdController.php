@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\AllowedStudentId;
 use Illuminate\Support\Facades\DB;
+use App\Helpers\EducationLevel;
 
 class AllowedStudentIdController extends Controller
 {
@@ -16,7 +17,7 @@ class AllowedStudentIdController extends Controller
     public function index(Request $request)
     {
         $show = $request->query('show','active'); // active|trashed|all
-        $education = $request->query('education_level', null); // null, new levels
+        // $education = $request->query('education_level', null); // removed
         $search = $request->query('q', null);
         $used = $request->query('used', null); // 'used'|'unused'|null
 
@@ -27,10 +28,7 @@ class AllowedStudentIdController extends Controller
             $query = AllowedStudentId::withTrashed();
         }
 
-        $validLevels = ['kindergarten','elementary','junior_high','senior_high','college','other'];
-        if ($education && in_array($education, $validLevels)) {
-            $query->where('education_level', $education);
-        }
+        // removed education level filter
 
         if ($search) {
             $query->where('student_id', 'like', "%{$search}%");
@@ -45,7 +43,7 @@ class AllowedStudentIdController extends Controller
         $items = $query->orderBy('student_id')->paginate(50);
         $items->appends($request->query());
 
-        return view('admin.allowed_student_ids.index', compact('items','show','education','search','used'));
+        return view('admin.allowed_student_ids.index', compact('items','show','search','used'));
     }
 
     public function create()
@@ -55,14 +53,27 @@ class AllowedStudentIdController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'student_id' => ['required','string','max:255','unique:allowed_student_ids,student_id'],
-            'education_level' => ['required','in:kindergarten,elementary,junior_high,senior_high,college,other'],
-        ]);
-
-        AllowedStudentId::create(array_merge($data, ['used' => false]));
-
-        return redirect()->route('admin.allowed-student-ids.index')->with('success','Allowed Student ID added.');
+        $idsRaw = $request->input('student_ids') ?? $request->input('student_id');
+        if (!$idsRaw) {
+            return back()->with('error', 'Please enter at least one student ID.');
+        }
+        // Split by space, comma, or newline
+        $ids = preg_split('/[\s,]+/', $idsRaw, -1, PREG_SPLIT_NO_EMPTY);
+        $ids = array_unique(array_map('trim', $ids));
+        $inserted = 0;
+        $skipped = 0;
+        foreach ($ids as $studentId) {
+            if (strlen($studentId) > 255) continue;
+            if (AllowedStudentId::withTrashed()->where('student_id', $studentId)->exists()) {
+                $skipped++;
+                continue;
+            }
+            AllowedStudentId::create(['student_id' => $studentId, 'used' => false]);
+            $inserted++;
+        }
+        $msg = "$inserted added.";
+        if ($skipped > 0) $msg .= " $skipped skipped (already exists).";
+        return redirect()->route('admin.allowed-student-ids.index')->with('success', $msg);
     }
 
     public function edit(AllowedStudentId $allowed_student_id)
@@ -73,11 +84,11 @@ class AllowedStudentIdController extends Controller
     public function update(Request $request, AllowedStudentId $allowed_student_id)
     {
         $data = $request->validate([
-            'education_level' => ['required','in:kindergarten,elementary,junior_high,senior_high,college,other'],
+            'education_level' => ['required','in:' . implode(',', array_keys(EducationLevel::options()))],
             'used' => ['nullable','boolean'],
         ]);
 
-        $allowed_student_id->update($data);
+        $allowed_student_id->update(['used' => $data['used'] ?? false]);
 
         return redirect()->route('admin.allowed-student-ids.index')->with('success','Updated.');
     }
@@ -126,8 +137,6 @@ class AllowedStudentIdController extends Controller
 
             // Normalize fields
             $studentId = isset($data[0]) ? trim($data[0]) : '';
-            $eduRaw = isset($data[1]) ? trim($data[1]) : '';
-
             // Skip header row if detected (common headers)
             if ($rowNumber === 1) {
                 $lower0 = strtolower($studentId);
@@ -144,17 +153,10 @@ class AllowedStudentIdController extends Controller
                 continue;
             }
 
-            $edu = strtolower($eduRaw ?: 'college');
-            if (!in_array($edu, ['basic','college'])) {
-                // If invalid education level, record error but default to college
-                $stats['errors'][] = "Row {$rowNumber}: invalid education_level '{$eduRaw}', defaulted to 'college'";
-                $edu = 'college';
-            }
-
             $exists = AllowedStudentId::withTrashed()->where('student_id', $studentId)->first();
             if ($exists) {
-                // If exists and identical education level and not trashed, treat as duplicate
-                if (! $exists->trashed() && $exists->education_level === $edu) {
+                // If exists and not trashed, treat as duplicate
+                if (! $exists->trashed()) {
                     $stats['skipped_duplicate']++;
                     continue;
                 }
@@ -165,15 +167,6 @@ class AllowedStudentIdController extends Controller
                     if (! $preview) { $exists->restore(); }
                 }
 
-                // Would update if education level differs
-                if ($exists->education_level !== $edu) {
-                    $stats['updated']++;
-                    if (! $preview) {
-                        $exists->education_level = $edu;
-                        $exists->save();
-                    }
-                }
-
                 continue;
             }
 
@@ -182,7 +175,7 @@ class AllowedStudentIdController extends Controller
                 $stats['inserted']++;
             } else {
                 try {
-                    AllowedStudentId::create(['student_id' => $studentId, 'education_level' => $edu, 'used' => false]);
+                    AllowedStudentId::create(['student_id' => $studentId, 'used' => false]);
                     $stats['inserted']++;
                 } catch (\Exception $e) {
                     $stats['invalid']++;
@@ -202,7 +195,7 @@ class AllowedStudentIdController extends Controller
         $scope = $request->input('scope','all'); // all or selected
         $selectAll = $request->boolean('select_all', false);
         $show = $request->input('show', 'active');
-        $education = $request->input('education_level', null);
+        // $education = $request->input('education_level', null); // removed
         $search = $request->input('q', null);
         $used = $request->input('used', null);
 
@@ -213,9 +206,7 @@ class AllowedStudentIdController extends Controller
             } elseif ($show === 'active') {
                 $query = AllowedStudentId::whereNull('deleted_at');
             }
-            if ($education && in_array($education, ['basic','college'])) {
-                $query->where('education_level', $education);
-            }
+            // removed education level filter
             if ($search) {
                 $query->where('student_id', 'like', "%{$search}%");
             }
@@ -247,7 +238,7 @@ class AllowedStudentIdController extends Controller
         $ids = $request->input('ids', []);
         $selectAll = $request->boolean('select_all', false);
         $show = $request->input('show', 'active');
-        $education = $request->input('education_level', null);
+        // $education = $request->input('education_level', null); // removed
         $search = $request->input('q', null);
         $used = $request->input('used', null);
 
@@ -258,9 +249,7 @@ class AllowedStudentIdController extends Controller
             } elseif ($show === 'all') {
                 $query = AllowedStudentId::withTrashed();
             }
-            if ($education && in_array($education, ['basic','college'])) {
-                $query->where('education_level', $education);
-            }
+            // removed education level filter
             if ($search) {
                 $query->where('student_id', 'like', "%{$search}%");
             }
@@ -290,7 +279,7 @@ class AllowedStudentIdController extends Controller
         $ids = $request->input('ids', []);
         $selectAll = $request->boolean('select_all', false);
         $show = $request->input('show', 'active');
-        $education = $request->input('education_level', null);
+        // $education = $request->input('education_level', null); // removed
         $search = $request->input('q', null);
         $used = $request->input('used', null);
 
@@ -301,9 +290,7 @@ class AllowedStudentIdController extends Controller
             } elseif ($show === 'active') {
                 $query = AllowedStudentId::whereNull('deleted_at');
             }
-            if ($education && in_array($education, ['basic','college'])) {
-                $query->where('education_level', $education);
-            }
+            // removed education level filter
             if ($search) {
                 $query->where('student_id', 'like', "%{$search}%");
             }
@@ -346,9 +333,7 @@ class AllowedStudentIdController extends Controller
             $query = AllowedStudentId::withTrashed();
         }
 
-        if ($education && in_array($education, ['basic','college'])) {
-            $query->where('education_level', $education);
-        }
+        // removed education level filter
 
         if ($search) {
             $query->where('student_id', 'like', "%{$search}%");
@@ -385,7 +370,7 @@ class AllowedStudentIdController extends Controller
                 fputcsv($out, [
                     $row->id,
                     $row->student_id,
-                    $row->education_level,
+                    // removed education level
                     $row->used ? '1' : '0',
                     $row->deleted_at ? $row->deleted_at->toDateTimeString() : '',
                     $row->created_at ? $row->created_at->toDateTimeString() : '',

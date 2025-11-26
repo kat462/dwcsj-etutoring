@@ -1,140 +1,122 @@
 @extends('layouts.app')
-
 @section('content')
-<div class="container mt-4">
-    <h2 class="mb-4">📅 Request Tutoring Session</h2>
-
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-
-    @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
-
-    <!-- Booking Request Form -->
-    <div class="card p-4 shadow mb-4">
-        <h4 class="mb-3">New Booking Request</h4>
-        <form method="POST" action="{{ route('student.bookings.store') }}">
-            @csrf
-            
-            <div class="mb-3">
-                <label for="subject_id" class="form-label">Subject</label>
-                <select name="subject_id" id="subject_id" class="form-control" required>
-                    <option value="">-- Select Subject --</option>
-                    @foreach($subjects as $subject)
-                        <option value="{{ $subject->id }}">
-                            {{ $subject->name }} ({{ $subject->education_level }})
-                        </option>
-                    @endforeach
-                </select>
-                @error('subject_id')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
-            </div>
-
-            <div class="mb-3">
-                <label for="tutor_id" class="form-label">Tutor</label>
-                <select name="tutor_id" id="tutor_id" class="form-control" required>
-                    <option value="">-- Select Tutor --</option>
-                    @foreach($tutors as $tutor)
-                        <option value="{{ $tutor->id }}">
-                            {{ $tutor->name }}
-                            @if($tutor->subjects->count() > 0)
-                                - Teaches: {{ $tutor->subjects->pluck('name')->join(', ') }}
-                            @endif
-                        </option>
-                    @endforeach
-                </select>
-                @error('tutor_id')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
-            </div>
-
-            <div class="mb-3">
-                <label for="session_date" class="form-label">Preferred Session Date & Time</label>
-                <input type="datetime-local" name="session_date" id="session_date" 
-                       class="form-control" required 
-                       min="{{ now()->format('Y-m-d\TH:i') }}">
-                @error('session_date')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
-            </div>
-
-            <div class="mb-3">
-                <label for="note" class="form-label">Notes (Optional)</label>
-                <textarea name="note" id="note" class="form-control" rows="3" 
-                          placeholder="Any specific topics or questions you'd like to cover..."></textarea>
-                @error('note')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
-            </div>
-
-            <button type="submit" class="btn btn-primary">Send Booking Request</button>
-        </form>
+<div class="page-header mb-4">
+    <div class="d-flex align-items-center mb-2">
+        <i class="bi bi-calendar-plus text-primary me-3" style="font-size: 2.2rem;"></i>
+        <h1 class="fw-bold mb-0">My Bookings</h1>
     </div>
-
-    <!-- My Bookings -->
-    <div class="card p-4 shadow">
-        <h4 class="mb-3">My Booking Requests</h4>
-        
-        @if($myBookings->count() > 0)
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Tutor</th>
-                            <th>Subject</th>
-                            <th>Session Date</th>
+</div>
+<div class="card card-modern mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Session</th>
+                        <th class="text-center">Tutor</th>
+                            <th>Date</th>
                             <th>Status</th>
-                            <th>Requested On</th>
+                            <th>Payment</th>
+                            <th>Method</th>
+                            <th>Reference</th>
                             <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($myBookings as $booking)
-                            <tr>
-                                <td>{{ $booking->tutor->name }}</td>
-                                <td>{{ $booking->subject->name }}</td>
-                                <td>{{ $booking->session_date ? $booking->session_date->format('M d, Y h:i A') : 'TBD' }}</td>
-                                <td>
-                                    @if($booking->status === 'pending')
+                    </tr>
+                </thead>
+                <tbody>
+                @forelse($myBookings as $booking)
+                    <tr>
+                        <td>{{ $booking->subject->name ?? '-' }}</td>
+                        <td class="text-center">
+                            @if($booking->tutor && $booking->tutor->profile && $booking->tutor->profile->profile_image)
+                                <img src="{{ asset('images/profile/' . $booking->tutor->profile->profile_image) }}" class="rounded-circle border border-2 mb-1" width="40" height="40" alt="{{ $booking->tutor->name }} profile image"><br>
+                            @else
+                                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-light border mb-1" style="width:40px;height:40px;">
+                                    <i class="bi bi-person-badge text-secondary" style="font-size:1.2rem;"></i>
+                                </span><br>
+                            @endif
+                            <span class="fw-semibold small">{{ $booking->tutor->name ?? '-' }}</span>
+                        </td>
+                        <td>{{ $booking->scheduled_at ? \Carbon\Carbon::parse($booking->scheduled_at)->format('M d, Y h:i A') : '-' }}</td>
+                        <td>
+                            @php
+                                $statusIcon = [
+                                    'pending' => 'clock',
+                                    'accepted' => 'calendar-check',
+                                    'completed' => 'check-circle',
+                                    'cancelled' => 'x-circle',
+                                ][$booking->status] ?? 'question-circle';
+                            @endphp
+                            <span class="badge d-flex align-items-center gap-1 @if($booking->status=='pending') bg-warning @elseif($booking->status=='accepted') bg-info @elseif($booking->status=='completed') bg-success @elseif($booking->status=='cancelled') bg-danger @else bg-secondary @endif">
+                                <i class="bi bi-{{ $statusIcon }}"></i> {{ ucfirst($booking->status) }}
+                            </span>
+                        </td>
+                            <td>
+                                @if($booking->is_paid)
+                                    @if($booking->payment_status == 'pending')
                                         <span class="badge bg-warning">Pending</span>
-                                    @elseif($booking->status === 'accepted')
-                                        <span class="badge bg-success">Accepted</span>
-                                    @elseif($booking->status === 'declined')
-                                        <span class="badge bg-danger">Declined</span>
-                                    @elseif($booking->status === 'completed')
-                                        <span class="badge bg-info">Completed</span>
-                                    @else
-                                        <span class="badge bg-secondary">{{ ucfirst($booking->status) }}</span>
-                                    @endif
-                                </td>
-                                <td>{{ $booking->created_at->format('M d, Y') }}</td>
-                                <td>
-                                    @if(in_array($booking->status, ['pending','accepted']) && Auth::id() === $booking->tutee_id)
-                                        <form method="POST" action="{{ route('bookings.cancel', $booking->id) }}" onsubmit="return confirm('Cancel this booking?')">
+                                        <span class="ms-2">₱{{ number_format($booking->rate, 2) }}</span>
+                                        <form method="POST" action="{{ route('payments.store') }}" class="d-inline d-flex flex-column flex-md-row align-items-start gap-2 mt-2">
                                             @csrf
-                                            <button class="btn btn-sm btn-outline-danger">Cancel</button>
+                                            <input type="hidden" name="booking_id" value="{{ $booking->id }}">
+                                            <select name="method" class="form-select form-select-sm w-auto" required style="min-width:110px;">
+                                                <option value="">Select Method</option>
+                                                <option value="cash">Cash</option>
+                                                <option value="gcash">GCash</option>
+                                                <option value="paymaya">PayMaya</option>
+                                                <option value="bank">Bank Transfer</option>
+                                            </select>
+                                            <input type="text" name="reference" class="form-control form-control-sm w-auto" placeholder="Reference/Receipt # (if any)">
+                                            <button type="submit" class="btn btn-sm btn-success">Pay Now</button>
                                         </form>
+                                    @elseif($booking->payment_status == 'paid')
+                                        <span class="badge bg-success">Paid</span>
+                                        <span class="ms-2">₱{{ number_format($booking->rate, 2) }}</span>
+                                    @else
+                                        <span class="badge bg-secondary">{{ ucfirst($booking->payment_status) }}</span>
                                     @endif
-
-                                    @if($booking->status === 'completed' && !$booking->feedback)
-                                        <a href="{{ route('feedback.create', $booking) }}" class="btn btn-sm btn-primary mt-1">
-                                            <i class="bi bi-star-fill me-1"></i>Leave Feedback
-                                        </a>
-                                    @elseif($booking->feedback)
-                                        <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i>Rated</span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @else
-            <p class="text-muted">No booking requests yet. Start by requesting a session above!</p>
-        @endif
+                                @else
+                                    <span class="badge bg-secondary">Free</span>
+                                @endif
+                            </td>
+                            <td>
+                                @php $payment = $booking->payments()->latest()->first(); @endphp
+                                @if($payment && $payment->method)
+                                    <span class="badge bg-info text-dark text-uppercase">{{ $payment->method }}</span>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($payment && $payment->reference)
+                                    <span class="text-break">{{ $payment->reference }}</span>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
+                        <td>
+                            @if($booking->status=='pending')
+                                <form method="POST" action="{{ route('bookings.cancel', $booking->id) }}" class="d-inline">@csrf
+                                    <button class="btn btn-sm btn-outline-danger">Cancel</button>
+                                </form>
+                            @elseif($booking->status=='completed' && !$booking->feedback)
+                                <a href="{{ route('feedback.create', $booking->id) }}" class="btn btn-sm btn-outline-primary">Give Feedback</a>
+                            @elseif($booking->status=='completed' && $booking->feedback)
+                                <span class="text-success small"><i class="bi bi-star-fill"></i> Feedback Given</span>
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-5">
+                            <i class="bi bi-calendar-x" style="font-size:2rem;"></i><br>
+                            No bookings yet. All your requested sessions will appear here.<br>
+                            <a href="{{ route('student.request_session') }}" class="btn btn-outline-primary btn-sm mt-2"><i class="bi bi-calendar-plus"></i> Request a Session</a>
+                        </td>
+                    </tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 @endsection

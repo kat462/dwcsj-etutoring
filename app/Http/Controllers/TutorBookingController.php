@@ -10,19 +10,13 @@ class TutorBookingController extends Controller
 {
     public function index()
     {
-        $pendingBookings = Auth::user()->bookingsAsTutor()
-            ->where('status', 'pending')
+        // Get all bookings for this tutor (pending, accepted, declined, completed, cancelled)
+        $bookings = Auth::user()->bookingsAsTutor()
             ->with(['tutee', 'subject'])
             ->latest()
             ->get();
 
-        $allBookings = Auth::user()->bookingsAsTutor()
-            ->whereIn('status', ['accepted', 'declined', 'completed', 'cancelled'])
-            ->with(['tutee', 'subject'])
-            ->latest()
-            ->get();
-
-        return view('tutor.bookings', compact('pendingBookings', 'allBookings'));
+        return view('tutor.bookings', compact('bookings'));
     }
 
     public function accept(Booking $booking)

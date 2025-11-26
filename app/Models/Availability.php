@@ -40,5 +40,10 @@ class Availability extends Model
     {
         return $this->hasOne(Booking::class, 'availability_id');
     }
+
+    public function subject()
+    {
+        return $this->belongsTo(\App\Models\Subject::class, 'subject_id');
+    }
 }
 

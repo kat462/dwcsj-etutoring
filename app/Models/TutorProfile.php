@@ -17,6 +17,8 @@ class TutorProfile extends Model
         'instagram',
         'other_link',
         'profile_image',
+        'rate', // decimal, nullable
+        'is_paid', // boolean, default false (free)
     ];
 
     public function user()

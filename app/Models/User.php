@@ -1,6 +1,7 @@
 <?php
 namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Hash;
@@ -21,14 +22,18 @@ use Illuminate\Support\Facades\Schema;
  * @property string $role
  */
 class User extends Authenticatable {
-    use Notifiable, SoftDeletes;
+    use Notifiable, SoftDeletes, HasFactory;
     protected $fillable = ['student_id','name','email','password','role','course','education_level','facebook_url','instagram_url','linkedin_url','bio','is_active'];
     protected $hidden = ['password','remember_token'];
     public function setPasswordAttribute($value){ $this->attributes['password'] = Hash::needsRehash($value) ? Hash::make($value) : $value; }
     public function subjects(){ return $this->belongsToMany(Subject::class,'subject_user'); }
     public function availabilities(){ return $this->hasMany(Availability::class); }
     public function bookingsAsTutee(){ return $this->hasMany(Booking::class,'tutee_id'); }
-    public function bookingsAsTutor(){ return $this->hasMany(Booking::class,'tutor_id'); }
+    // All bookings where this user is the tutor
+    public function bookingsAsTutor()
+    {
+        return $this->hasMany(Booking::class, 'tutor_id');
+    }
     public function feedbacksGiven(){ return $this->hasMany(Feedback::class,'tutee_id'); }
     public function feedbacksReceived(){ return $this->hasMany(Feedback::class,'tutor_id'); }
     public function profile(){ return $this->hasOne(TutorProfile::class); }
@@ -53,6 +58,11 @@ class User extends Authenticatable {
         return null;
     }
 
+    // All feedbacks where this user is the tutor (for dashboard top tutors)
+    public function feedbacks()
+    {
+        return $this->hasMany(Feedback::class, 'tutor_id');
+    }
     // Role helpers
     public function isAdmin(): bool { return $this->role === 'admin'; }
     public function isTutor(): bool { return $this->role === 'tutor'; }

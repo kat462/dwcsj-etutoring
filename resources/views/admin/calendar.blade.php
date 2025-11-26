@@ -1,65 +1,83 @@
 @extends('layouts.app')
-
-@section('title', 'All Sessions Calendar')
-
 @section('content')
-<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-    <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">All Sessions Calendar</h1>
-        <p class="mt-2 text-gray-600">Monitor all tutoring sessions across the platform.</p>
+<div class="page-header mb-4">
+    <div class="d-flex align-items-center mb-2">
+        <i class="bi bi-calendar3 text-primary me-3" style="font-size: 2.2rem;"></i>
+        <h1 class="fw-bold mb-0">Admin Calendar</h1>
     </div>
-
-    <!-- Legend -->
-    <div class="bg-white rounded-lg shadow mb-6 p-6">
-        <h3 class="text-sm font-medium text-gray-900 mb-4">Session Status</h3>
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
-            <div class="flex items-center">
-                <div class="w-4 h-4 bg-yellow-400 rounded mr-2"></div>
-                <span class="text-sm text-gray-600">Pending</span>
-            </div>
-            <div class="flex items-center">
-                <div class="w-4 h-4 bg-blue-400 rounded mr-2"></div>
-                <span class="text-sm text-gray-600">Accepted</span>
-            </div>
-            <div class="flex items-center">
-                <div class="w-4 h-4 bg-green-400 rounded mr-2"></div>
-                <span class="text-sm text-gray-600">Completed</span>
-            </div>
-            <div class="flex items-center">
-                <div class="w-4 h-4 bg-red-400 rounded mr-2"></div>
-                <span class="text-sm text-gray-600">Cancelled</span>
-            </div>
-            <div class="flex items-center">
-                <div class="w-4 h-4 bg-gray-400 rounded mr-2"></div>
-                <span class="text-sm text-gray-600">Declined</span>
+</div>
+<div class="row g-4 mb-4">
+    <div class="col-md-8">
+        <div class="card card-modern mb-4 shadow-sm border-0">
+            <div class="card-body">
+                <div id="admin-calendar"></div>
             </div>
         </div>
     </div>
-
-    <!-- Calendar Container -->
-    <div class="bg-white rounded-lg shadow p-6">
-        <div id="adminCalendar" class="fc-light"></div>
+    <div class="col-md-4">
+        <div class="card card-modern mb-4 shadow-sm border-0 h-100">
+            <div class="card-body d-flex flex-column align-items-center justify-content-center" style="min-height: 350px;">
+                <h5 class="mb-3">Booking Status Overview</h5>
+                <canvas id="calendarStatusChart" height="180"></canvas>
+            </div>
+        </div>
     </div>
 </div>
 
-@push('scripts')
-<script type="module">
-    import { initAdminCalendar } from '/resources/js/calendar.js';
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        const calendarEl = document.getElementById('adminCalendar');
-        initAdminCalendar(calendarEl);
-    });
-</script>
+@push('head')
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 @endpush
-
-<!-- Include FullCalendar CSS -->
-<link href="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/index.global.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/@fullcalendar/bootstrap5@6.1.8/index.global.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.8/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.8/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.8/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/bootstrap5@6.1.8/index.global.min.js"></script>
-
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script src="/js/admin-calendar.js"></script>
+    <script>
+        (function() {
+            const pending = {{ $statusCounts['pending'] ?? 0 }};
+            const accepted = {{ $statusCounts['accepted'] ?? 0 }};
+            const completed = {{ $statusCounts['completed'] ?? 0 }};
+            const cancelled = {{ $statusCounts['cancelled'] ?? 0 }};
+            const declined = {{ $statusCounts['declined'] ?? 0 }};
+            const total = pending + accepted + completed + cancelled + declined;
+            let chartData, chartColors, chartLabels;
+            if (total === 0) {
+                chartLabels = ['Pending', 'Accepted', 'Completed', 'Cancelled', 'Declined'];
+                chartData = [1, 1, 1, 1, 1];
+                chartColors = [
+                    'rgba(251,191,36,0.15)', 'rgba(96,165,250,0.15)', 'rgba(16,185,129,0.15)', 'rgba(239,68,68,0.15)', 'rgba(107,114,128,0.15)'
+                ];
+            } else {
+                chartLabels = ['Pending', 'Accepted', 'Completed', 'Cancelled', 'Declined'];
+                chartData = [pending, accepted, completed, cancelled, declined];
+                chartColors = [
+                    '#fbbf24', '#60a5fa', '#10b981', '#ef4444', '#6b7280'
+                ];
+            }
+            new Chart(document.getElementById('calendarStatusChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        data: chartData,
+                        backgroundColor: chartColors,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {position: 'bottom'},
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if (total === 0) return 'No data';
+                                    return context.label + ': ' + context.parsed;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        })();
+    </script>
+@endpush
 @endsection

@@ -25,12 +25,17 @@ class Booking extends Model
     use HasFactory;
 
     protected $fillable = [
-        'tutor_id', 'tutee_id', 'availability_id', 'scheduled_at', 'status', 'notes', 'subject_id'
+        'tutor_id', 'tutee_id', 'availability_id', 'scheduled_at', 'status', 'notes', 'subject_id', 'is_paid', 'rate', 'payment_status'
     ];
 
     protected $casts = [
         'scheduled_at' => 'datetime',
     ];
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'booking_id');
+    }
 
     public function tutor()
     {
@@ -92,4 +97,3 @@ class Booking extends Model
         return null;
     }
 }
- 

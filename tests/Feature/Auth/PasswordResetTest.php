@@ -1,6 +1,6 @@
 <?php
-
 namespace Tests\Feature\Auth;
+use Illuminate\Support\Facades\DB;
 
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -8,9 +8,16 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
+
 class PasswordResetTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class);
+    }
 
     public function test_reset_password_link_screen_can_be_rendered(): void
     {
@@ -23,10 +30,27 @@ class PasswordResetTest extends TestCase
     {
         Notification::fake();
 
-        $user = User::factory()->create();
+        // Use a unique student_id and email for each run
+        $uniqueId = 'DWC' . rand(100, 999);
+        $uniqueEmail = 'reset' . rand(1000, 9999) . '@example.com';
+        DB::table('allowed_student_ids')->insert([
+            'student_id' => $uniqueId,
+            'education_level' => 'college',
+            'used' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $user = User::factory()->create([
+            'student_id' => $uniqueId,
+            'education_level' => 'college',
+            'email' => $uniqueEmail,
+            'email_verified_at' => now(),
+        ]);
 
-        $this->post('/forgot-password', ['email' => $user->email]);
-
+        $response = $this->post('/forgot-password', ['email' => $user->email]);
+        if (!$response->isRedirection()) {
+            fwrite(STDERR, "\nForgot password response:\n" . $response->getContent() . "\n");
+        }
         Notification::assertSentTo($user, ResetPassword::class);
     }
 

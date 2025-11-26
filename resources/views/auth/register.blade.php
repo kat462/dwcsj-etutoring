@@ -1,169 +1,151 @@
 @extends('layouts.guest')
 
 @section('content')
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="auth-card">
-            <div class="card-header-custom">
-                <h2><i class="bi bi-person-plus me-2"></i>Create Account</h2>
-                <p>Join DWCSJ Peer Tutoring Community</p>
-            </div>
-            <div class="card-body-custom">
-                <form method="POST" action="{{ route('register') }}">
-                    @csrf
 
+@section('content')
+<div class="row justify-content-center align-items-center min-vh-100 py-4">
+    <div class="col-12 col-md-8 col-lg-5">
+        <div class="auth-card shadow-lg rounded-4 border-0 p-0 overflow-hidden bg-white">
+            <div class="card-header-custom text-center py-4 px-4 bg-primary text-white">
+                <h2 class="fw-bold mb-1"><i class="bi bi-person-plus me-2"></i>Create Account</h2>
+                <p class="mb-0">Sign up to access peer tutoring</p>
+            </div>
+            <div class="card-body-custom p-4">
+                <form method="POST" action="{{ route('register') }}" novalidate autocomplete="off">
+                    @csrf
                     <!-- Student ID -->
-                    <div class="mb-3">
-                        <label for="student_id" class="form-label">Student ID</label>
+                    <div class="form-floating mb-3">
                         <input 
                             id="student_id" 
                             type="text" 
-                            class="form-control @error('student_id') is-invalid @enderror" 
+                            class="form-control rounded-3 @error('student_id') is-invalid @enderror" 
                             name="student_id" 
                             value="{{ old('student_id') }}" 
                             required 
-                            autocomplete="username"
+                            autofocus 
                             placeholder="e.g., DWC001 or 2025-000123"
                         />
+                        <label for="student_id">Student ID</label>
                         @error('student_id')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-
                     <!-- Name -->
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Full Name</label>
+                    <div class="form-floating mb-3">
                         <input 
                             id="name" 
                             type="text" 
-                            class="form-control @error('name') is-invalid @enderror" 
+                            class="form-control rounded-3 @error('name') is-invalid @enderror" 
                             name="name" 
                             value="{{ old('name') }}" 
                             required 
-                            autofocus 
-                            autocomplete="name"
-                            placeholder="Enter your full name"
+                            placeholder="Enter your name"
                         />
+                        <label for="name">Full Name</label>
                         @error('name')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-
-                    <!-- Email Address (optional) -->
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email Address (optional)</label>
+                    <!-- Email -->
+                    <div class="form-floating mb-3">
                         <input 
                             id="email" 
                             type="email" 
-                            class="form-control @error('email') is-invalid @enderror" 
+                            class="form-control rounded-3 @error('email') is-invalid @enderror" 
                             name="email" 
                             value="{{ old('email') }}" 
-                            autocomplete="email"
-                            placeholder="your.email@example.com"
+                            placeholder="Enter your email"
                         />
+                        <label for="email">Email Address</label>
                         @error('email')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-
                     <!-- Education Level -->
-                    <div class="mb-3">
-                        <label for="education_level" class="form-label">Education Level</label>
+                    <div class="form-floating mb-3">
+                        @php use App\Helpers\EducationLevel; @endphp
                         <select 
                             id="education_level" 
                             name="education_level" 
-                            class="form-select @error('education_level') is-invalid @enderror" 
+                            class="form-select rounded-3 @error('education_level') is-invalid @enderror" 
                             required
                         >
-                            <option value="">-- Select Education Level --</option>
-                            <option value="kindergarten" {{ old('education_level') == 'kindergarten' ? 'selected' : '' }}>Kindergarten</option>
-                            <option value="elementary" {{ old('education_level') == 'elementary' ? 'selected' : '' }}>Elementary</option>
-                            <option value="junior_high" {{ old('education_level') == 'junior_high' ? 'selected' : '' }}>Junior High School</option>
-                            <option value="senior_high" {{ old('education_level') == 'senior_high' ? 'selected' : '' }}>Senior High School</option>
-                            <option value="college" {{ old('education_level') == 'college' ? 'selected' : '' }}>College</option>
-                            <option value="other" {{ old('education_level') == 'other' ? 'selected' : '' }}>Other</option>
+                            <option value="">Select level</option>
+                            @foreach(EducationLevel::options() as $key => $label)
+                                <option value="{{ $key }}" {{ old('education_level') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
                         </select>
+                        <label for="education_level">Education Level</label>
                         @error('education_level')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-
-                    <!-- Default role as tutee (hidden) -->
-                    <input type="hidden" name="role" value="tutee" />
-
+                    <!-- Role -->
+                    <div class="form-floating mb-3">
+                        <select 
+                            id="role" 
+                            name="role" 
+                            class="form-select rounded-3"
+                            required
+                        >
+                            <option value="" disabled {{ old('role') ? '' : 'selected' }}>Select role</option>
+                            <option value="tutee" {{ old('role') == 'tutee' ? 'selected' : '' }}>Tutee &mdash; Book a tutor</option>
+                            <option value="tutor" {{ old('role') == 'tutor' ? 'selected' : '' }}>Tutor &mdash; Help other students</option>
+                        </select>
+                        <label for="role">Role</label>
+                    </div>
                     <!-- Password -->
-                    <div class="mb-3 position-relative">
-                        <label for="password" class="form-label">Password</label>
-                        <div class="input-group">
-                            <input 
-                                id="password" 
-                                type="password" 
-                                class="form-control @error('password') is-invalid @enderror" 
-                                name="password" 
-                                required 
-                                autocomplete="new-password"
-                                placeholder="Create a strong password"
-                            />
-                            <button type="button" class="btn btn-outline-secondary" tabindex="-1" onclick="togglePassword('password')">
-                                <i class="bi bi-eye" id="togglePasswordIcon"></i>
-                            </button>
-                        </div>
+                    <div class="form-floating mb-3 position-relative">
+                        <input 
+                            id="password" 
+                            type="password" 
+                            class="form-control rounded-3 @error('password') is-invalid @enderror" 
+                            name="password" 
+                            required 
+                            placeholder="Create a password"
+                        />
+                        <label for="password">Password</label>
+                        <button type="button" class="btn btn-sm btn-outline-secondary position-absolute top-50 end-0 translate-middle-y me-2" style="z-index:2;" onclick="togglePassword('password')" tabindex="-1"><i class="bi bi-eye"></i></button>
                         @error('password')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                        <small class="text-muted">Minimum 8 characters</small>
                     </div>
-
                     <!-- Confirm Password -->
-                    <div class="mb-4 position-relative">
-                        <label for="password_confirmation" class="form-label">Confirm Password</label>
-                        <div class="input-group">
-                            <input 
-                                id="password_confirmation" 
-                                type="password" 
-                                class="form-control" 
-                                name="password_confirmation" 
-                                required 
-                                autocomplete="new-password"
-                                placeholder="Re-enter your password"
-                            />
-                            <button type="button" class="btn btn-outline-secondary" tabindex="-1" onclick="togglePassword('password_confirmation')">
-                                <i class="bi bi-eye" id="togglePasswordIconConfirm"></i>
-                            </button>
-                        </div>
+                    <div class="form-floating mb-3 position-relative">
+                        <input 
+                            id="password_confirmation" 
+                            type="password" 
+                            class="form-control rounded-3" 
+                            name="password_confirmation" 
+                            required 
+                            placeholder="Re-enter your password"
+                        />
+                        <label for="password_confirmation">Confirm Password</label>
+                        <button type="button" class="btn btn-sm btn-outline-secondary position-absolute top-50 end-0 translate-middle-y me-2" style="z-index:2;" onclick="togglePassword('password_confirmation')" tabindex="-1"><i class="bi bi-eye"></i></button>
                     </div>
-
-                    <!-- Submit Button -->
-                    <button type="submit" class="btn-primary-custom">
-                        <i class="bi bi-person-plus me-2"></i>Create Account
+                    <button type="submit" class="btn-primary-custom w-100 py-2 fs-5 rounded-3 mt-2">
+                        <i class="bi bi-person-plus me-2"></i>Register
                     </button>
-
-                    <!-- Login Link -->
                     <div class="text-center mt-4">
                         <p class="mb-0">Already have an account? 
                             <a href="{{ route('login') }}" class="text-link">
-                                Log in here
+                                Sign in
                             </a>
                         </p>
                     </div>
                 </form>
-                            <script>
-                            function togglePassword(fieldId) {
-                                const input = document.getElementById(fieldId);
-                                const icon = fieldId === 'password' ? document.getElementById('togglePasswordIcon') : document.getElementById('togglePasswordIconConfirm');
-                                if (input.type === 'password') {
-                                    input.type = 'text';
-                                    icon.classList.remove('bi-eye');
-                                    icon.classList.add('bi-eye-slash');
-                                } else {
-                                    input.type = 'password';
-                                    icon.classList.remove('bi-eye-slash');
-                                    icon.classList.add('bi-eye');
-                                }
-                            }
-                            </script>
             </div>
         </div>
     </div>
 </div>
+<script>
+function togglePassword(id) {
+    const input = document.getElementById(id);
+    if (input.type === 'password') {
+        input.type = 'text';
+    } else {
+        input.type = 'password';
+    }
+}
+</script>
 @endsection

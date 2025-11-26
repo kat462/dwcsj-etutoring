@@ -27,7 +27,19 @@ class AdminDashboardController extends Controller
         $totalFeedback = $this->metrics->getTotalFeedback();
         $averagePlatformRating = $this->metrics->getAveragePlatformRating();
         $sessionsByStatus = $this->metrics->getSessionsByStatus();
-        $monthlySessionsData = $this->metrics->getMonthlySessions();
+        // Get monthly sessions as [month => count]
+        $monthlyRaw = $this->metrics->getMonthlySessions();
+        // Build labels and data for all 12 months
+        $labels = [];
+        $data = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $labels[] = date('M', mktime(0, 0, 0, $m, 1));
+            $data[] = isset($monthlyRaw[$m]) ? $monthlyRaw[$m] : 0;
+        }
+        $monthlySessionsData = [
+            'labels' => $labels,
+            'data' => $data,
+        ];
 
         // The following remain as controller-specific for now
         $statusData = $this->getSessionsStatusChart();
@@ -36,6 +48,23 @@ class AdminDashboardController extends Controller
         $topTutors = $this->getTopTutors();
         $topSubjects = $this->getMostRequestedSubjects();
         $educationBreakdown = $this->getEducationLevelBreakdown();
+
+        // Payment analytics: monthly totals for current year
+        $monthlyPaymentsRaw = \App\Models\Payment::selectRaw('MONTH(created_at) as month, SUM(amount) as total')
+            ->whereYear('created_at', now()->year)
+            ->where('status', 'paid')
+            ->groupBy('month')
+            ->pluck('total', 'month');
+        $paymentLabels = [];
+        $paymentData = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $paymentLabels[] = date('M', mktime(0, 0, 0, $m, 1));
+            $paymentData[] = isset($monthlyPaymentsRaw[$m]) ? (float)$monthlyPaymentsRaw[$m] : 0;
+        }
+        $monthlyPaymentsData = [
+            'labels' => $paymentLabels,
+            'data' => $paymentData,
+        ];
 
         return view('admin.dashboard', compact(
             'totalUsers',
@@ -51,12 +80,46 @@ class AdminDashboardController extends Controller
             'recentBookings',
             'topTutors',
             'topSubjects',
-            'educationBreakdown'
+            'educationBreakdown',
+            'monthlyPaymentsData'
         ));
     }
 
-    // Get total user count
-    // ...existing code for controller-specific metrics...
+    public function analytics()
+    {
+        // Bookings per month
+        $monthlyRaw = $this->metrics->getMonthlySessions();
+        $labels = [];
+        $data = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $labels[] = date('M', mktime(0, 0, 0, $m, 1));
+            $data[] = isset($monthlyRaw[$m]) ? $monthlyRaw[$m] : 0;
+        }
+        $monthlySessionsData = [
+            'labels' => $labels,
+            'data' => $data,
+        ];
+
+        // User roles
+        $roles = [
+            'Admin' => User::where('role', 'admin')->count(),
+            'Tutor' => User::where('role', 'tutor')->count(),
+            'Tutee' => User::where('role', 'tutee')->count(),
+        ];
+        $rolesData = [
+            'labels' => array_keys($roles),
+            'data' => array_values($roles),
+        ];
+
+        // Subjects
+        $subjects = Subject::withCount('bookings')->orderBy('bookings_count', 'desc')->limit(5)->get();
+        $subjectsData = [
+            'labels' => $subjects->pluck('name')->toArray(),
+            'data' => $subjects->pluck('bookings_count')->toArray(),
+        ];
+
+        return view('admin.analytics', compact('monthlySessionsData', 'rolesData', 'subjectsData'));
+    }
 
     // Get sessions by status for chart
     private function getSessionsStatusChart()

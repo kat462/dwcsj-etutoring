@@ -7,6 +7,15 @@ use Illuminate\Support\Facades\Auth;
 
 class FeedbackController extends Controller
 {
+    // Tutee feedback list
+    public function tuteeList()
+    {
+        $feedbacks = Feedback::with(['booking.subject', 'tutor'])
+            ->where('tutee_id', Auth::id())
+            ->latest()
+            ->get();
+        return view('student.feedback', compact('feedbacks'));
+    }
     public function create(Booking $booking)
     {
         // Ensure the booking belongs to the logged-in student

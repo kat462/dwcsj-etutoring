@@ -29,12 +29,19 @@
                 box-sizing: border-box;
             }
             
+            html {
+                font-size: 17px;
+            }
+            @media (max-width: 768px) {
+                html { font-size: 15.5px; }
+            }
             body {
                 font-family: 'Inter', sans-serif;
                 min-height: 100vh;
                 display: flex;
                 flex-direction: column;
                 background: linear-gradient(135deg, rgba(22, 163, 74, 0.05) 0%, rgba(234, 179, 8, 0.05) 100%);
+                font-size: 1rem;
             }
             
             /* Header Styles */
@@ -194,8 +201,8 @@
             .form-select {
                 border: 2px solid #e5e7eb;
                 border-radius: 0.5rem;
-                padding: 0.75rem 1rem;
-                font-size: 0.95rem;
+                padding: 0.85rem 1.1rem;
+                font-size: 1.05rem;
                 transition: all 0.3s ease;
             }
             
@@ -209,10 +216,10 @@
                 background: linear-gradient(135deg, var(--primary-color) 0%, #15803d 100%);
                 border: none;
                 color: white;
-                padding: 0.875rem 2rem;
+                padding: 0.95rem 2.1rem;
                 border-radius: 0.5rem;
                 font-weight: 600;
-                font-size: 1rem;
+                font-size: 1.08rem;
                 transition: all 0.3s ease;
                 width: 100%;
             }
@@ -226,10 +233,10 @@
                 background: transparent;
                 border: 2px solid var(--primary-color);
                 color: var(--primary-color);
-                padding: 0.875rem 2rem;
+                padding: 0.95rem 2.1rem;
                 border-radius: 0.5rem;
                 font-weight: 600;
-                font-size: 1rem;
+                font-size: 1.08rem;
                 transition: all 0.3s ease;
                 text-decoration: none;
                 display: inline-block;

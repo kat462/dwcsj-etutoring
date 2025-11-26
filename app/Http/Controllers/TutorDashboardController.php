@@ -18,6 +18,48 @@ class TutorDashboardController extends Controller
     {
         $this->metrics = $metrics;
     }
+
+    /**
+     * Browse/search/filter student requests (for tutors)
+     */
+    public function browseRequests(\Illuminate\Http\Request $request)
+    {
+        $subjects = \App\Models\Subject::all();
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $query = \App\Models\Booking::with(['student.profile', 'subject'])
+            ->where('tutor_id', $user->id);
+        if ($request->filled('q')) {
+            $q = $request->input('q');
+            $query->where(function($sub) use ($q) {
+                $sub->whereHas('student', function($sq) use ($q) {
+                    $sq->where('name', 'like', "%$q%");
+                })
+                ->orWhereHas('subject', function($sq) use ($q) {
+                    $sq->where('name', 'like', "%$q%");
+                });
+            });
+        }
+        if ($request->filled('subject_id')) {
+            $query->where('subject_id', $request->input('subject_id'));
+        }
+        if ($request->filled('date')) {
+            $query->whereDate('scheduled_at', $request->input('date'));
+        }
+        // Payment filter
+        if ($request->filled('payment')) {
+            if ($request->input('payment') === 'paid') {
+                $query->where('is_paid', 1);
+            } elseif ($request->input('payment') === 'free') {
+                $query->where('is_paid', 0);
+            }
+        }
+        // Rate filter
+        if ($request->filled('min_rate')) {
+            $query->where('rate', '>=', $request->input('min_rate'));
+        }
+        $requests = $query->orderBy('scheduled_at')->paginate(12)->appends($request->query());
+        return view('tutor.browse_requests', compact('requests', 'subjects'));
+    }
     /**
      * Show tutor dashboard with metrics and widgets
      */

@@ -8,17 +8,20 @@ use Illuminate\Support\Facades\Auth;
 
 class TutorProfileController extends Controller
 {
+    /**
+     * Show the form for editing the authenticated tutor's profile.
+     */
+    public function edit()
+    {
+        $profile = auth()->user()->profile;
+        return view('tutor.profile_edit', compact('profile'));
+    }
     public function show()
     {
         $profile = Auth::user()->profile;
         return view('tutor.profile', compact('profile'));
     }
 
-    public function edit()
-    {
-        $profile = Auth::user()->profile;
-        return view('tutor.profile_edit', compact('profile'));
-    }
 
     public function update(Request $request)
     {
@@ -29,14 +32,20 @@ class TutorProfileController extends Controller
             'instagram' => 'nullable|url',
             'other_link' => 'nullable|url',
             'profile_image' => 'nullable|image|max:2048',
+            'is_paid' => 'nullable|boolean',
+            'rate' => 'nullable|numeric|min:0',
         ]);
 
         $user = Auth::user();
         $profile = $user->profile ?? new TutorProfile(['user_id' => $user->id]);
 
         $data = $request->only([
-            'bio', 'education_level', 'facebook', 'instagram', 'other_link'
+            'bio', 'education_level', 'facebook', 'instagram', 'other_link', 'is_paid', 'rate'
         ]);
+        $data['is_paid'] = $request->has('is_paid') ? 1 : 0;
+        if (!$data['is_paid']) {
+            $data['rate'] = null;
+        }
 
         if ($request->hasFile('profile_image')) {
             $filename = time().'_'.$request->file('profile_image')->getClientOriginalName();

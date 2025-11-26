@@ -8,22 +8,33 @@ class SubjectSeeder extends Seeder
     public function run()
     {
         $subjects = [
-            // College subjects
-            ['code' => 'MATH101', 'name' => 'Calculus I', 'education_level' => 'College'],
-            ['code' => 'ENG101', 'name' => 'English Composition', 'education_level' => 'College'],
-            ['code' => 'CS101', 'name' => 'Intro to Programming', 'education_level' => 'College'],
-            ['code' => 'BIO101', 'name' => 'Biology I', 'education_level' => 'College'],
-            ['code' => 'ACCT101', 'name' => 'Accounting Fundamentals', 'education_level' => 'College'],
-            
-            // Basic Ed subjects
-            ['code' => 'MATH-BE', 'name' => 'Mathematics', 'education_level' => 'Basic Ed'],
-            ['code' => 'SCI-BE', 'name' => 'Science', 'education_level' => 'Basic Ed'],
-            ['code' => 'ENG-BE', 'name' => 'English', 'education_level' => 'Basic Ed'],
-            ['code' => 'FIL-BE', 'name' => 'Filipino', 'education_level' => 'Basic Ed'],
+            // College
+            ['name' => 'Calculus I', 'education_level' => 'College'],
+            ['name' => 'English Composition', 'education_level' => 'College'],
+            ['name' => 'Intro to Programming', 'education_level' => 'College'],
+            ['name' => 'Biology I', 'education_level' => 'College'],
+            ['name' => 'Accounting Fundamentals', 'education_level' => 'College'],
+            // Senior High
+            ['name' => 'General Mathematics', 'education_level' => 'Senior High'],
+            ['name' => 'Physical Science', 'education_level' => 'Senior High'],
+            ['name' => 'Oral Communication', 'education_level' => 'Senior High'],
+            ['name' => 'Filipino', 'education_level' => 'Senior High'],
+            // Junior High
+            ['name' => 'Mathematics', 'education_level' => 'Junior High'],
+            ['name' => 'Science', 'education_level' => 'Junior High'],
+            ['name' => 'English', 'education_level' => 'Junior High'],
+            ['name' => 'Filipino', 'education_level' => 'Junior High'],
+            // Basic Ed
+            ['name' => 'Mathematics', 'education_level' => 'Basic Ed'],
+            ['name' => 'Science', 'education_level' => 'Basic Ed'],
+            ['name' => 'English', 'education_level' => 'Basic Ed'],
+            ['name' => 'Filipino', 'education_level' => 'Basic Ed'],
         ];
-        
         foreach($subjects as $s) {
-            Subject::create($s);
+            Subject::updateOrCreate([
+                'name' => $s['name'],
+                'education_level' => $s['education_level']
+            ], $s);
         }
     }
 }

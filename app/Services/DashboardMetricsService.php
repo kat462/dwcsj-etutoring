@@ -2,11 +2,13 @@
 
 namespace App\Services;
 
+
 use App\Models\Booking;
 use App\Models\Feedback;
 use App\Models\User;
 use App\Models\Subject;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class DashboardMetricsService
 {
@@ -49,7 +51,7 @@ class DashboardMetricsService
     // Example: Get sessions by status
     public function getSessionsByStatus()
     {
-        return Booking::select('status', \DB::raw('count(*) as total'))
+        return Booking::select('status', DB::raw('count(*) as total'))
             ->groupBy('status')
             ->pluck('total', 'status');
     }

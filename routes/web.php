@@ -1,4 +1,48 @@
 <?php
+// Edit profile page for tutor
+// (Route is now defined inside the tutor middleware group below)
+// --- Real-time notification test route (DEV ONLY) ---
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Notifications\Notification as BaseNotification;
+use Illuminate\Notifications\Messages\BroadcastMessage;
+use Illuminate\Support\Facades\Route;
+
+Route::middleware('auth')->get('/test-notification', function () {
+    $user = auth()->user();
+    // Anonymous notification for test
+    $notification = new class extends BaseNotification {
+        public function via($notifiable) { return ['database', 'broadcast']; }
+        public function toArray($notifiable) {
+            return [
+                'message' => '🔔 This is a real-time test notification!',
+                'subject' => 'Test',
+                'scheduled_at' => now()->toDateTimeString(),
+            ];
+        }
+        public function toBroadcast($notifiable) {
+            return new BroadcastMessage($this->toArray($notifiable));
+        }
+    };
+    $user->notify($notification);
+    return 'Notification sent!';
+});
+
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::post('/admin/users/{id}/toggle', [\App\Http\Controllers\Admin\UserController::class, 'toggleActive'])->name('admin.user.toggle');
+    Route::delete('/admin/users/{id}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('admin.user.delete');
+});
+
+// Centralized dashboard redirect: always sends user to correct dashboard based on role
+Route::middleware(['auth'])->get('/dashboard', function () {
+    $user = auth()->user();
+    if (method_exists($user, 'isAdmin') && $user->isAdmin()) {
+        return redirect()->route('admin.dashboard');
+    } elseif (method_exists($user, 'isTutor') && $user->isTutor()) {
+        return redirect()->route('tutor.dashboard');
+    } else {
+        return redirect()->route('student.dashboard');
+    }
+})->name('dashboard');
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
@@ -9,7 +53,15 @@ use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\TutorBookingController;
 use App\Http\Controllers\FeedbackController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
+// Admin payment records
+Route::middleware(['auth', 'role:admin'])->get('/admin/payments', [AdminPaymentController::class, 'index'])->name('admin.payments.index');
+// Payment routes (optional payment)
+Route::middleware(['auth'])->group(function () {
+    Route::post('/payments', [PaymentController::class, 'store'])->name('payments.store');
+    Route::get('/payments/{id}', [PaymentController::class, 'show'])->name('payments.show');
+});
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
@@ -29,52 +81,27 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
 
 // Healthcheck endpoint for Railway (returns 200 OK)
 Route::get('/health', function () {
     return response('OK', 200);
 });
 
-// Backwards-compatible redirects for legacy/quick links to avoid 404s
-// these keep older UI links working and point to meaningful pages
-Route::get('/tutors', function () {
-    return redirect()->route('student.bookings');
-});
 
-// Generic calendar link (legacy) -> student's bookings/calendar page
-Route::get('/calendar', function () {
-    return redirect()->route('student.bookings');
-});
-
-// Legacy create bookings link — redirect to the tutor profile if tutor_id provided,
-// otherwise go to bookings index for the student.
-Route::get('/bookings/create', function (Request $request) {
-    $tutorId = $request->query('tutor_id');
-    if ($tutorId) {
-        return redirect()->route('tutors.show', ['id' => $tutorId]);
-    }
-    return redirect()->route('student.bookings');
-});
-
-// Backwards-compatible student calendar/feedback shorthand routes
-Route::get('/student/calendar', function () {
-    return redirect()->route('student.bookings');
-});
-
-Route::get('/student/feedback', function () {
-    return redirect()->route('student.bookings');
-});
+// Legacy/quick links removed for clarity. All dashboard, calendar, and feedback routes are now role-based and centralized.
 
 
 // Role-based dashboards
 Route::middleware(['auth', 'role:tutee'])->group(function () {
+    // Browse tutors (search/filter)
+    Route::get('/student/browse-tutors', [\App\Http\Controllers\StudentDashboardController::class, 'browseTutors'])->name('student.tutors.browse');
     Route::get('/student/dashboard', [StudentDashboardController::class, 'index'])->name('student.dashboard');
     Route::get('/student/bookings', [BookingController::class, 'index'])->name('student.bookings');
+    Route::get('/student/request-session', [BookingController::class, 'requestSession'])->name('student.request_session');
+    Route::get('/student/calendar', [BookingController::class, 'calendar'])->name('student.calendar');
     Route::post('/student/bookings', [BookingController::class, 'store'])->name('student.bookings.store');
     Route::post('/bookings/{id}/cancel', [\App\Http\Controllers\BookingController::class, 'cancel'])->name('bookings.cancel');
+    Route::get('/student/feedback', [FeedbackController::class, 'tuteeList'])->name('student.feedback');
     Route::get('/student/feedback/{booking}', [FeedbackController::class, 'create'])->name('feedback.create');
     Route::post('/student/feedback/{booking}', [FeedbackController::class, 'store'])->name('feedback.store');
     // Student calendar booking
@@ -82,6 +109,8 @@ Route::middleware(['auth', 'role:tutee'])->group(function () {
 });
 
 Route::middleware(['auth', 'role:tutor'])->group(function () {
+    // Browse student requests (search/filter)
+    Route::get('/tutor/browse-requests', [\App\Http\Controllers\TutorDashboardController::class, 'browseRequests'])->name('tutor.requests.browse');
     Route::get('/tutor/dashboard', [\App\Http\Controllers\TutorDashboardController::class, 'index'])->name('tutor.dashboard');
     Route::get('/tutor/profile', [TutorProfileController::class, 'show'])->name('tutor.profile.show');
     Route::get('/tutor/profile/edit', [TutorProfileController::class, 'edit'])->name('tutor.profile.edit');
@@ -98,6 +127,8 @@ Route::middleware(['auth', 'role:tutor'])->group(function () {
     Route::get('/tutor/availabilities', [\App\Http\Controllers\AvailabilityController::class, 'index'])->name('tutor.availabilities.index');
     Route::get('/tutor/availabilities/create', [\App\Http\Controllers\AvailabilityController::class, 'create'])->name('tutor.availabilities.create');
     Route::post('/tutor/availabilities', [\App\Http\Controllers\AvailabilityController::class, 'store'])->name('tutor.availabilities.store');
+    Route::get('/tutor/availabilities/{id}/edit', [\App\Http\Controllers\AvailabilityController::class, 'edit'])->name('tutor.availabilities.edit');
+    Route::put('/tutor/availabilities/{id}', [\App\Http\Controllers\AvailabilityController::class, 'update'])->name('tutor.availabilities.update');
     Route::delete('/tutor/availabilities/{id}', [\App\Http\Controllers\AvailabilityController::class, 'destroy'])->name('tutor.availabilities.destroy');
     // Tutor calendar
     Route::get('/tutor/calendar', [\App\Http\Controllers\AvailabilityController::class, 'index'])->name('tutor.calendar');
@@ -136,12 +167,23 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'show'])->name('admin.users.show');
     Route::delete('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('admin.users.destroy');
     Route::post('/admin/users/{id}/restore', [\App\Http\Controllers\Admin\UserController::class, 'restore'])->name('admin.users.restore');
+    // Bulk user actions
+    Route::post('/admin/users/bulk-delete', [\App\Http\Controllers\Admin\UserController::class, 'bulkDelete'])->name('admin.users.bulkDelete');
+    Route::post('/admin/users/bulk-restore', [\App\Http\Controllers\Admin\UserController::class, 'bulkRestore'])->name('admin.users.bulkRestore');
+
+    // Admin subjects management
+    Route::get('/admin/subjects', [\App\Http\Controllers\Admin\SubjectController::class, 'index'])->name('admin.subjects.index');
+    Route::post('/admin/subjects', [\App\Http\Controllers\Admin\SubjectController::class, 'store'])->name('admin.subjects.store');
+    Route::delete('/admin/subjects/{subject}', [\App\Http\Controllers\Admin\SubjectController::class, 'destroy'])->name('admin.subjects.destroy');
     // Admin feedback moderation
     Route::get('/admin/feedback', [\App\Http\Controllers\Admin\FeedbackController::class, 'index'])->name('admin.feedback.index');
     Route::delete('/admin/feedback/{feedback}', [\App\Http\Controllers\Admin\FeedbackController::class, 'destroy'])->name('admin.feedback.destroy');
     Route::post('/admin/feedback/{id}/restore', [\App\Http\Controllers\Admin\FeedbackController::class, 'restore'])->name('admin.feedback.restore');
     // Admin calendar
     Route::get('/admin/calendar', [\App\Http\Controllers\BookingController::class, 'adminCalendar'])->name('admin.calendar');
+    Route::get('/admin/calendar/events', [\App\Http\Controllers\BookingController::class, 'calendarEvents'])->name('admin.calendar.events');
+    // Admin analytics (real data)
+    Route::get('/admin/analytics', [\App\Http\Controllers\AdminDashboardController::class, 'analytics'])->name('admin.analytics');
 });
 
 Route::middleware('auth')->group(function () {
@@ -151,3 +193,4 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+require __DIR__.'/notifications.php';

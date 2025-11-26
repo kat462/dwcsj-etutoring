@@ -8,14 +8,30 @@ use App\Models\Availability;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Subject;
 use App\Models\User;
+use App\Notifications\NewBookingRequest;
 
 class BookingController extends Controller
 {
+    // Show request session form
+    public function requestSession()
+    {
+        $subjects = Subject::all();
+        $tutors = User::where('role', 'tutor')->where('is_active', 1)->get();
+        return view('student.request_session', compact('subjects', 'tutors'));
+    }
+
+    // Show tutee calendar view
+    public function calendar()
+    {
+        return view('student.calendar');
+    }
     // Tutee: request a booking for a tutor (choose availability or custom datetime)
-    public function store(Request $request, $tutorId)
+    public function store(Request $request)
     {
         $this->authorize('create', \App\Models\Booking::class);
 
+
+        $tutorId = $request->input('tutor_id');
         if (Auth::id() == $tutorId) {
             return redirect()->back()->with('error', 'You cannot book yourself.');
         }
@@ -39,6 +55,10 @@ class BookingController extends Controller
             $scheduledAt = $availability->date->format('Y-m-d') . ' ' . $availability->start_time;
         }
 
+        // Get payment info from tutor profile
+        $tutor = User::find($tutorId);
+        $isPaid = $tutor && $tutor->profile && $tutor->profile->is_paid ? 1 : 0;
+        $rate = $tutor && $tutor->profile ? $tutor->profile->rate : null;
         $booking = Booking::create([
             'tutor_id' => $tutorId,
             'tutee_id' => $tutee->id,
@@ -47,11 +67,20 @@ class BookingController extends Controller
             'subject_id' => $request->input('subject_id') ?? null,
             'status' => 'pending',
             'notes' => $request->notes,
+            'is_paid' => $isPaid,
+            'rate' => $rate,
+            'payment_status' => $isPaid ? 'pending' : 'free',
         ]);
 
         if ($availability) {
             $availability->is_booked = true;
             $availability->save();
+        }
+
+        // Notify the tutor (email + in-app)
+        $tutor = User::find($tutorId);
+        if ($tutor) {
+            $tutor->notify(new NewBookingRequest($booking));
         }
 
         return redirect()->back()->with('success','Booking request sent');
@@ -184,4 +213,3 @@ class BookingController extends Controller
         return view('admin.calendar');
     }
 }
- 
