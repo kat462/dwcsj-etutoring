@@ -48,19 +48,19 @@
             .site-header {
                 background: linear-gradient(135deg, var(--primary-color) 0%, #15803d 100%);
                 color: white;
-                padding: 1rem 0;
+                padding: 0.5rem 0 0.5rem 0;
                 box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             }
             
             .site-header .logo-section {
                 display: flex;
                 align-items: center;
-                gap: 1rem;
+                gap: 0;
             }
             
             .logo-badge {
-                width: 64px;
-                height: 64px;
+                width: 56px;
+                height: 56px;
                 border-radius: 50%;
                 background: transparent; /* hide white circle */
                 display: flex;
@@ -72,25 +72,25 @@
             }
 
             .site-header .logo-img {
-                width: 50px;
-                height: 50px;
+                width: 48px;
+                height: 48px;
                 object-fit: contain;
                 filter: drop-shadow(0 1px 1.5px rgba(0,0,0,0.25)); /* keep logo legible */
             }
             
             .site-header h1 {
-                font-size: 2.1rem;
+                font-size: 1.35rem;
                 font-weight: 700;
-                margin: 0;
-                line-height: 1.15;
+                margin: 0 0 0 0.15rem;
+                line-height: 1.1;
                 letter-spacing: 0.5px;
             }
             
             .site-header .subtitle {
-                font-size: 1.1rem;
+                font-size: 0.95rem;
                 opacity: 0.92;
                 font-weight: 500;
-                margin-top: 0.15rem;
+                margin-top: 0.12rem;
                 letter-spacing: 0.1px;
                 color: #e0e7ef;
                 text-shadow: 0 1px 2px rgba(0,0,0,0.08);
@@ -100,15 +100,18 @@
                 display: flex;
                 gap: 1rem;
                 align-items: center;
+                margin-left: auto;
+                justify-content: flex-end;
             }
             
             .header-nav a {
                 color: white;
                 text-decoration: none;
-                padding: 0.5rem 1rem;
-                border-radius: 0.375rem;
+                padding: 0.7rem 1.3rem;
+                border-radius: 0.5rem;
                 transition: all 0.3s ease;
-                font-weight: 500;
+                font-weight: 600;
+                font-size: 1.13rem;
             }
             
             .header-nav a:hover {
@@ -365,41 +368,36 @@
     <body>
         <!-- Header -->
         <header class="site-header">
-            <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <div class="logo-section">
-                            <a href="{{ url('/') }}" class="d-flex align-items-center text-decoration-none text-white">
-                                <div class="logo-badge">
-                                    <img src="{{ asset('images/DWCSJ_Seal.png') }}" alt="DWCSJ Logo" class="logo-img">
-                                </div>
-                                <div>
-                                    <h1 class="mb-0">DWCSJ Peer Tutoring</h1>
-                                    <p class="subtitle mb-0">Divine Word College of San Jose</p>
-                                </div>
+            <div class="d-flex flex-column flex-md-row align-items-center justify-content-center gap-3 py-2 px-3 px-md-5">
+                <div class="logo-section mb-2 mb-md-0 me-md-4 flex-shrink-0">
+                    <a href="{{ url('/') }}" class="d-flex align-items-center text-decoration-none text-white">
+                        <div class="logo-badge me-3">
+                            <img src="{{ asset('images/DWCSJ_Seal.png') }}" alt="DWCSJ Logo" class="logo-img">
+                        </div>
+                        <div>
+                            <h1 class="mb-0">DWCSJ Peer Tutoring</h1>
+                            <p class="subtitle mb-0">Divine Word College of San Jose</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="flex-grow-1"></div>
+                <div class="header-nav" style="max-width: 420px;">
+                    @if (Route::has('login'))
+                        @auth
+                            <a href="{{ url('/dashboard') }}">
+                                <i class="bi bi-speedometer2 me-2"></i>Dashboard
                             </a>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="header-nav justify-content-md-end">
-                            @if (Route::has('login'))
-                                @auth
-                                    <a href="{{ url('/dashboard') }}">
-                                        <i class="bi bi-speedometer2 me-2"></i>Dashboard
-                                    </a>
-                                @else
-                                    <a href="{{ route('login') }}">
-                                        <i class="bi bi-box-arrow-in-right me-2"></i>Log in
-                                    </a>
-                                    @if (Route::has('register'))
-                                        <a href="{{ route('register') }}" class="btn-register">
-                                            <i class="bi bi-person-plus me-2"></i>Register
-                                        </a>
-                                    @endif
-                                @endauth
+                        @else
+                            <a href="{{ route('login') }}">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Log in
+                            </a>
+                            @if (Route::has('register'))
+                                <a href="{{ route('register') }}" class="btn-register">
+                                    <i class="bi bi-person-plus me-2"></i>Register
+                                </a>
                             @endif
-                        </div>
-                    </div>
+                        @endauth
+                    @endif
                 </div>
             </div>
         </header>
@@ -429,7 +427,7 @@
                                 <!-- About Us Modal -->
                                 <div class="modal fade" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
                                     <div class="modal-dialog modal-lg modal-dialog-centered">
-                                        <div class="modal-content" style="padding: 2rem 2.5rem;">
+                                        <div class="modal-content" style="padding: 2rem 2.5rem; background: #e6f0fa;">
                                             <div class="modal-header flex-column align-items-center border-0 pb-0">
                                                 <h5 class="modal-title w-100 text-center fw-bold" id="aboutModalLabel" style="color: var(--primary-color);">About Us</h5>
                                                 <div style="width: 60px; height: 4px; background: linear-gradient(90deg, var(--primary-color) 0%, #15803d 100%); border-radius: 2px; margin: 0.5rem auto 0.5rem auto;"></div>
@@ -443,22 +441,21 @@
                                                 <div class="row g-4 mb-2">
                                                     <div class="col-md-4 text-center">
                                                         <img src="{{ asset('images/developers/kathleen.png') }}" alt="Kathleen" class="rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid var(--primary-color);">
-                                                        <div class="fw-semibold">Kathleen</div>
+                                                        <div style="color: #111;">Kathleen</div>
                                                         <div class="text-muted small">Full Stack Developer</div>
                                                     </div>
                                                     <div class="col-md-4 text-center">
                                                         <img src="{{ asset('images/developers/genaline.png') }}" alt="Gen" class="rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid var(--secondary-color);">
-                                                        <div class="fw-semibold">Gen</div>
+                                                        <div style="color: #111;">Gen</div>
                                                         <div class="text-muted small">Documentation &amp; ERD</div>
                                                     </div>
                                                     <div class="col-md-4 text-center">
                                                         <img src="{{ asset('images/developers/juvylaine.png') }}" alt="Juvy" class="rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid var(--accent-color);">
-                                                        <div class="fw-semibold">Juvy</div>
+                                                        <div style="color: #111;">Juvy</div>
                                                         <div class="text-muted small">Database Design &amp; System Flowcharts</div>
                                                     </div>
                                                 </div>
-                                                <div class="mt-4">
-                                                    <div class="fw-bold mb-1">Advisers</div>
+                                                <div class="mt-2 mb-1">
                                                     <div class="fw-bold mb-1" style="color: var(--primary-color);">Advisers</div>
                                                     <div class="text-muted small" style="color: #6b7280 !important;">Ma'am Lorena P. Florita<br>Sir Peter B. Serqui&ntilde;a</div>
                                                 </div>
@@ -476,9 +473,8 @@
                     </div>
                 </div>
                 <div class="footer-bottom">
-                    <p class="mb-0">&copy; {{ date('Y') }} Divine Word College of San Jose. All rights reserved.<br>
-                        Built by <a href="https://github.com/kat462/peer-tutoring-system#credits" target="_blank" style="text-decoration: underline; color: #fff; font-weight: 500;">DWCSJ BSIT Capstone Team</a>
-                    </p>
+                    <p class="mb-0">&copy; {{ date('Y') }} Divine Word College of San Jose. All rights reserved.</p>
+                    <p class="mb-0 mt-2">Built by <a href="https://github.com/kat462/peer-tutoring-system#credits" target="_blank" style="text-decoration: underline; color: #fff; font-weight: 500;">DWCSJ BSIT Capstone Team</a></p>
                 </div>
             </div>
         </footer>

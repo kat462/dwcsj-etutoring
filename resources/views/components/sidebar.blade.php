@@ -43,6 +43,11 @@
             </a>
         </li>
         <li><a href="{{ route('admin.analytics') }}" class="sidebar-link {{ request()->routeIs('admin.analytics') ? 'active' : '' }}"><i class="bi bi-graph-up"></i> <span class="sidebar-link-text">Analytics</span></a></li>
+        <li class="mt-2">
+            <a href="{{ route('profile.edit') }}" class="sidebar-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}">
+                <i class="bi bi-gear"></i> <span class="sidebar-link-text">Settings</span>
+            </a>
+        </li>
     @elseif($role === 'tutor')
         <li><a href="{{ route('tutor.dashboard') }}" class="sidebar-link {{ request()->routeIs('tutor.dashboard') ? 'active' : '' }}"><i class="bi bi-speedometer2"></i> <span class="sidebar-link-text">Dashboard</span></a></li>
         <li><a href="{{ route('tutor.profile.show') }}" class="sidebar-link {{ request()->routeIs('tutor.profile.*') ? 'active' : '' }}"><i class="bi bi-person-badge"></i> <span class="sidebar-link-text">My Profile</span></a></li>

@@ -6,25 +6,26 @@
         <!-- Hero Content -->
         <div class="col-lg-6 mb-5 mb-lg-0 d-flex align-items-center" style="z-index:2;">
             <div class="hero-content w-100">
-                <h1 class="display-4 fw-bold mb-4" style="color: #1f2937;">
-                    Welcome to <span style="color: var(--primary-color);">DWCSJ Peer Tutoring System</span>
+                <h1 class="display-4 fw-bold mb-4">
+                    <span style="color: #111; font-size:3.2rem;">Welcome to</span><br>
+                    <span style="color: var(--primary-color);">DWCSJ E-Tutoring System</span>
                 </h1>
                 <p class="lead mb-4" style="color: #6b7280; font-size: 1.25rem;">
                     Empowering students through collaborative learning. Connect with peer tutors,
                     share knowledge, and achieve academic excellence together.
                 </p>
                 
-                <div class="d-flex flex-wrap gap-3 mb-4">
+                <div class="d-flex flex-row justify-content-end gap-3 mb-4">
                     @auth
                         <a href="{{ url('/dashboard') }}" class="btn btn-lg btn-primary-custom">
                             <i class="bi bi-speedometer2 me-2"></i>Go to Dashboard
                         </a>
                     @else
-                        <a href="{{ route('register') }}" class="btn btn-lg btn-primary-custom shadow-sm px-4 py-2" style="min-width:160px; transition:all 0.2s;">
-                            <i class="bi bi-person-plus me-2"></i>Get Started
+                        <a href="{{ route('register') }}" class="btn btn-lg btn-primary-custom shadow-sm px-4 py-2 d-flex align-items-center justify-content-center gap-2" style="min-width:160px; transition:all 0.2s;">
+                            <span class="d-flex align-items-center justify-content-center"><i class="bi bi-person-plus me-2"></i><span>Get Started</span></span>
                         </a>
-                        <a href="{{ route('login') }}" class="btn btn-lg btn-outline-secondary px-4 py-2" style="min-width:140px; border-width:2px; transition:all 0.2s;">
-                            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                        <a href="{{ route('login') }}" class="btn btn-lg btn-outline-secondary px-4 py-2 d-flex align-items-center justify-content-center gap-2" style="min-width:140px; border-width:2px; transition:all 0.2s;">
+                            <span class="d-flex align-items-center justify-content-center"><i class="bi bi-box-arrow-in-right me-2"></i><span>Sign In</span></span>
                         </a>
                     @endauth
                 </div>
